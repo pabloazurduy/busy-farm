@@ -1,8 +1,19 @@
 # Busy Farm
 
+> [!IMPORTANT]
+> **This project is 100% vibe coded.** Its design, implementation, tests, and documentation were produced through iterative prompting and AI-assisted development. Review the source and security assumptions yourself before relying on it.
+
 Busy Farm is a Firefox-first website blocker synchronized with a [BUSY Bar](https://busy.app/). When the device reports a running work phase, configured websites are redirected to a local focus screen. Break, idle, and completed phases release the block.
 
 The project has no runtime or build dependencies. One source tree produces a reliable Firefox extension and a Chromium-compatible development build.
+
+## Screenshots
+
+| Focus timer | Completed-cycle farm |
+| --- | --- |
+| ![Busy Farm popup showing a focus timer and circular progress indicator](docs/screenshots/popup-focus.png) | ![Busy Farm weekly chicken farm showing completed focus cycles](docs/screenshots/chicken-farm.png) |
+
+![Busy Farm blocking reddit.com during an active BUSY focus cycle](docs/screenshots/blocked-page.png)
 
 ## What is implemented
 
@@ -75,6 +86,22 @@ Firefox uses a persistent background page and polls BUSY every 1–2 seconds, wh
 ## Connect BUSY Cloud
 
 Busy Farm uses only the official BUSY internet API at `https://api.busy.app/busybar`. Create a [Cloud API token](https://cloud.busy.app/api-tokens) with Bar access, paste it into extension settings, then select **Test connection** and **Save and monitor**. The current authentication and snapshot contract is documented in the [BUSY HTTP API documentation](https://docs.busy.app/bar/dev/http-api); snapshot shapes are also represented in the official [BUSY TypeScript library](https://github.com/busy-app/busylib-ts).
+
+### How the BUSY Bar link works
+
+The extension does not connect directly to the physical Bar over Bluetooth or the local network. The connection is:
+
+```text
+Physical BUSY Bar ↔ BUSY desktop/mobile app ↔ BUSY Cloud API ↔ Busy Farm extension
+```
+
+1. You start, pause, or finish a timer from the Bar or BUSY app.
+2. BUSY synchronizes that state to your account in BUSY Cloud.
+3. Busy Farm authenticates with the Cloud API token and reads the current `/busybar/busy/snapshot` response.
+4. The extension normalizes the snapshot into focus, paused, break, idle, or disconnected state.
+5. During a focus state, matching top-level website navigations are redirected to the local blocked page. When focus ends, blocking is removed and redirected tabs can be restored.
+
+This integration is deliberately read-only: Busy Farm never starts, pauses, cancels, or changes the timer on the Bar. The token therefore links the extension to the timer state already maintained by BUSY rather than pairing the extension directly with the hardware.
 
 The credential is stored in `browser.storage.local` for this extension and browser profile. Reloading the same extension or installing a normal signed update preserves it because the extension ID remains unchanged. Removing the extension, clearing its site/extension data, changing the extension ID, or using another browser profile does not preserve it. Firefox temporary add-ons are removed when Firefox exits, so use **Reload** in `about:debugging` while developing rather than removing and re-adding the add-on. The token is redacted from UI state, diagnostics, and exported settings files.
 
