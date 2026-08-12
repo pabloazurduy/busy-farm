@@ -1,7 +1,8 @@
 # Busy Farm
 
 > [!IMPORTANT]
-> **This project is 100% vibe coded.** Its design, implementation, tests, and documentation were produced through iterative prompting and AI-assisted development. Review the source and security assumptions yourself before relying on it.
+> **This project is 100% vibe coded.** (ChatGPT SOL xHigh) Its design, implementation, tests, and documentation were produced through iterative prompting and AI-assisted development. Review the source and security assumptions yourself before relying on it.
+> I make in an afternoon after frustration of not being able to connect the [BUSY Bar](https://busy.app/) with the [Forest app](https://forestapp.cc/) extension to block sites in the browser. 
 
 Busy Farm is a Firefox-first website blocker synchronized with a [BUSY Bar](https://busy.app/). When the device reports a running work phase, configured websites are redirected to a local focus screen. Break, idle, and completed phases release the block.
 
