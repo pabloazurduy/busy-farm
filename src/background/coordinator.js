@@ -175,8 +175,8 @@ export class Coordinator {
   async updateAction() {
     const action = actionApi();
     const remaining = this.currentRemainingMs();
-    let text = "";
-    let color = "#4f5969";
+    let text = null;
+    let color = null;
     if (this.runtime.phase === "WORK_RUNNING") {
       text = remaining == null ? "ON" : String(Math.max(1, Math.ceil(remaining / 60000)));
       color = "#2ba896";
@@ -187,10 +187,25 @@ export class Coordinator {
       text = "!";
       color = "#c75b64";
     }
+    const titleTask = action.setTitle({
+      title: `Busy Farm · ${this.runtime.phase.replaceAll("_", " ").toLowerCase()}`,
+    }).catch(() => null);
+    if (text == null) {
+      // Firefox can retain an empty badge capsule if its text and color are
+      // updated concurrently. Null explicitly removes the global MV2 badge;
+      // Chromium's MV3 API uses the empty string for the equivalent reset.
+      const clearedText = manifestVersion() === 2 ? null : "";
+      await Promise.all([
+        action.setBadgeText({ text: clearedText }).catch(() => null),
+        titleTask,
+      ]);
+      return;
+    }
+    // Set the color before revealing the text to avoid a default-color flash.
+    await action.setBadgeBackgroundColor({ color }).catch(() => null);
     await Promise.all([
       action.setBadgeText({ text }).catch(() => null),
-      action.setBadgeBackgroundColor({ color }).catch(() => null),
-      action.setTitle({ title: `Busy Farm · ${this.runtime.phase.replaceAll("_", " ").toLowerCase()}` }).catch(() => null),
+      titleTask,
     ]);
   }
 

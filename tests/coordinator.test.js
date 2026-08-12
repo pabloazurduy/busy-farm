@@ -19,9 +19,13 @@ test("coordinator follows a simulated BUSY work-to-break transition", async (con
   };
   let requestListener;
   const tabUpdates = [];
+  const badgeTexts = [];
+  const badgeColors = [];
   globalThis.browser = firefoxMock(stored, {
     onRequest(listener) { requestListener = listener; },
     onTabUpdate(id, update) { tabUpdates.push({ id, update }); },
+    onBadgeText(details) { badgeTexts.push(details.text); },
+    onBadgeColor(details) { badgeColors.push(details.color); },
   });
   context.after(() => { delete globalThis.browser; });
 
@@ -44,6 +48,13 @@ test("coordinator follows a simulated BUSY work-to-break transition", async (con
   assert.equal(coordinator.runtime.phase, "BREAK_RUNNING");
   assert.equal(coordinator.runtime.blockingActive, false);
   assert.deepEqual(tabUpdates, []);
+
+  const colorsBeforeIdle = badgeColors.length;
+  await coordinator.setSimulation("idle");
+  await coordinator.pollOnce();
+  assert.equal(coordinator.runtime.phase, "IDLE");
+  assert.equal(badgeTexts.at(-1), null);
+  assert.equal(badgeColors.length, colorsBeforeIdle);
 });
 
 test("coordinator requires explicit origin permission before adding a rule", async (context) => {
@@ -81,8 +92,8 @@ function firefoxMock(stored, hooks = {}) {
     },
     alarms: { async get() { return null; }, async create() {} },
     browserAction: {
-      async setBadgeText() {},
-      async setBadgeBackgroundColor() {},
+      async setBadgeText(details) { hooks.onBadgeText?.(details); },
+      async setBadgeBackgroundColor(details) { hooks.onBadgeColor?.(details); },
       async setTitle() {},
     },
     webRequest: {

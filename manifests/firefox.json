@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Busy Farm",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Block distracting sites while your BUSY Bar work phase is running.",
   "browser_specific_settings": {
     "gecko": {
