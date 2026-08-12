@@ -17,6 +17,7 @@ const elements = Object.fromEntries([
   "token", "token-status", "test-connection",
   "save-connection", "connection-state", "connection-result", "site-form", "site-host",
   "site-subdomains", "site-list", "site-empty", "site-count", "block-paused", "restore-tabs",
+  "theme-select",
   "preference-state", "simulation", "export", "import-trigger", "import-file", "diagnostic-list",
   "farm-count", "farm-title", "farm-subtitle", "farm-field", "chicken-yard", "farm-empty", "farm-days",
 ].map((id) => [id.replace(/-([a-z])/g, (_, character) => character.toUpperCase()), byId(id)]));
@@ -31,6 +32,7 @@ elements.testConnection.addEventListener("click", testConnection);
 elements.siteForm.addEventListener("submit", addSite);
 elements.blockPaused.addEventListener("change", savePreferences);
 elements.restoreTabs.addEventListener("change", savePreferences);
+elements.themeSelect.addEventListener("change", savePreferences);
 elements.simulation.addEventListener("change", setSimulation);
 elements.export.addEventListener("click", exportSettings);
 elements.importTrigger.addEventListener("click", () => elements.importFile.click());
@@ -69,6 +71,7 @@ function hydrateConnectionForm() {
     : "No credential saved.";
   elements.blockPaused.checked = state.settings.behavior.blockWhilePaused;
   elements.restoreTabs.checked = state.settings.behavior.restoreTabsAfterFocus;
+  elements.themeSelect.value = state.settings.appearance.theme ?? "system";
   elements.simulation.value = state.settings.developer.simulation ?? "";
 }
 
@@ -297,6 +300,7 @@ async function savePreferences() {
         blockWhilePaused: elements.blockPaused.checked,
         restoreTabsAfterFocus: elements.restoreTabs.checked,
       },
+      appearance: { theme: elements.themeSelect.value },
     });
     elements.preferenceState.textContent = "Saved";
     preferenceTimer = setTimeout(() => { elements.preferenceState.textContent = ""; }, 1800);

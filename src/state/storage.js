@@ -1,28 +1,41 @@
 import { extensionApi } from "../shared/platform.js";
 import { DEFAULT_RUNTIME, DEFAULT_SETTINGS, STORAGE_KEYS } from "./defaults.js";
+import { compactCycleHistory } from "./history.js";
 
 export async function loadState() {
   const api = extensionApi();
   const stored = await api.storage.local.get([
     STORAGE_KEYS.SETTINGS,
     STORAGE_KEYS.SITES,
+    STORAGE_KEYS.SITES_BACKUP,
     STORAGE_KEYS.RUNTIME,
     STORAGE_KEYS.DIAGNOSTICS,
     STORAGE_KEYS.HISTORY,
   ]);
   const storedSettings = stored[STORAGE_KEYS.SETTINGS];
-  let settings = mergeSettings(storedSettings);
-  let sites = Array.isArray(stored[STORAGE_KEYS.SITES]) ? stored[STORAGE_KEYS.SITES] : [];
+  const settings = mergeSettings(storedSettings);
+  const primarySites = stored[STORAGE_KEYS.SITES];
+  const backupSites = stored[STORAGE_KEYS.SITES_BACKUP];
+  const sites = cloneSites(Array.isArray(primarySites)
+    ? primarySites
+    : Array.isArray(backupSites)
+      ? backupSites
+      : []);
+  const storedHistory = Array.isArray(stored[STORAGE_KEYS.HISTORY])
+    ? stored[STORAGE_KEYS.HISTORY]
+    : [];
+  const history = compactCycleHistory(storedHistory);
 
-  if (Number(storedSettings?.removedDefaultSitesVersion ?? 0) < 1) {
-    // Remove only rules created by the retired bundled-site migration. Rules
-    // created manually keep their own IDs and are intentionally preserved.
-    sites = removeRetiredBundledRules(sites);
-    settings = { ...settings, removedDefaultSitesVersion: 1 };
+  if (!sameSites(primarySites, sites) || !sameSites(backupSites, sites)) {
     await api.storage.local.set({
-      [STORAGE_KEYS.SETTINGS]: settings,
       [STORAGE_KEYS.SITES]: sites,
+      [STORAGE_KEYS.SITES_BACKUP]: sites,
     });
+  }
+
+  if (history.length !== storedHistory.length
+    || history.some((record, index) => record.id !== storedHistory[index]?.id)) {
+    await api.storage.local.set({ [STORAGE_KEYS.HISTORY]: history });
   }
 
   return {
@@ -32,15 +45,8 @@ export async function loadState() {
     diagnostics: Array.isArray(stored[STORAGE_KEYS.DIAGNOSTICS])
       ? stored[STORAGE_KEYS.DIAGNOSTICS]
       : [],
-    history: Array.isArray(stored[STORAGE_KEYS.HISTORY])
-      ? stored[STORAGE_KEYS.HISTORY]
-      : [],
+    history,
   };
-}
-
-export function removeRetiredBundledRules(sites) {
-  return (Array.isArray(sites) ? sites : [])
-    .filter((site) => !String(site.id ?? "").startsWith("default-"));
 }
 
 export function mergeSettings(stored) {
@@ -65,7 +71,11 @@ export async function saveSettings(settings) {
 }
 
 export async function saveSites(sites) {
-  await extensionApi().storage.local.set({ [STORAGE_KEYS.SITES]: sites });
+  const savedSites = cloneSites(sites);
+  await extensionApi().storage.local.set({
+    [STORAGE_KEYS.SITES]: savedSites,
+    [STORAGE_KEYS.SITES_BACKUP]: savedSites,
+  });
 }
 
 export async function saveRuntime(runtime) {
@@ -78,4 +88,12 @@ export async function saveDiagnostics(entries) {
 
 export async function saveHistory(entries) {
   await extensionApi().storage.local.set({ [STORAGE_KEYS.HISTORY]: entries.slice(-10000) });
+}
+
+function cloneSites(sites) {
+  return (Array.isArray(sites) ? sites : []).map((site) => ({ ...site }));
+}
+
+function sameSites(value, sites) {
+  return Array.isArray(value) && JSON.stringify(value) === JSON.stringify(sites);
 }

@@ -299,6 +299,10 @@ export class Coordinator {
 
   async savePreferences(payload) {
     const behavior = payload?.behavior ?? {};
+    const requestedTheme = payload?.appearance?.theme;
+    const theme = new Set(["system", "light", "dark"]).has(requestedTheme)
+      ? requestedTheme
+      : this.settings.appearance.theme;
     this.settings = mergeSettings({
       ...this.settings,
       behavior: {
@@ -306,6 +310,7 @@ export class Coordinator {
         blockWhilePaused: Boolean(behavior.blockWhilePaused),
         restoreTabsAfterFocus: behavior.restoreTabsAfterFocus !== false,
       },
+      appearance: { ...this.settings.appearance, theme },
     });
     await saveSettings(this.settings);
     const previousBlocking = this.runtime.blockingActive;
@@ -394,6 +399,7 @@ export class Coordinator {
       exportedAt: new Date().toISOString(),
       settings: {
         behavior: { ...this.settings.behavior },
+        appearance: { ...this.settings.appearance },
       },
       sites: this.sites,
     };
@@ -416,12 +422,19 @@ export class Coordinator {
       entries.findIndex((candidate) => candidate.hostname === entry.hostname) === index);
     await Promise.all(sites.map((site) => this.requireOriginPermission(site.permissionPattern)));
     const importedBehavior = data.settings?.behavior ?? {};
+    const importedTheme = data.settings?.appearance?.theme;
     this.settings = mergeSettings({
       ...this.settings,
       behavior: {
         ...this.settings.behavior,
         blockWhilePaused: Boolean(importedBehavior.blockWhilePaused),
         restoreTabsAfterFocus: importedBehavior.restoreTabsAfterFocus !== false,
+      },
+      appearance: {
+        ...this.settings.appearance,
+        theme: new Set(["system", "light", "dark"]).has(importedTheme)
+          ? importedTheme
+          : this.settings.appearance.theme,
       },
       developer: { ...this.settings.developer, simulation: null },
     });

@@ -7,6 +7,7 @@
     <link rel="icon" href="../../assets/icons/icon-32.png">
     <link rel="stylesheet" href="../shared.css">
     <link rel="stylesheet" href="style.css">
+    <script type="module" src="../theme.js"></script>
   </head>
   <body>
     <header class="page-header">
@@ -137,6 +138,14 @@
             <div class="switch-row">
               <div><strong>Return blocked tabs after focus</strong><p>Restore tabs Busy Farm redirected when the work phase ends.</p></div>
               <label class="switch"><input id="restore-tabs" type="checkbox"><span></span><b class="sr-only">Restore blocked tabs</b></label>
+            </div>
+            <div class="switch-row theme-row">
+              <div><strong>Appearance</strong><p>Use the farm at sunrise, after dark, or follow your device.</p></div>
+              <label class="theme-control"><span class="sr-only">Color theme</span><select id="theme-select">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select></label>
             </div>
             <p class="save-state" id="preference-state" role="status"></p>
           </div>

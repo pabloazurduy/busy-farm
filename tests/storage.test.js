@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { CLOUD_BASE_URL } from "../src/busy/connection.js";
-import { mergeSettings, removeRetiredBundledRules } from "../src/state/storage.js";
+import { loadState, mergeSettings, saveSites } from "../src/state/storage.js";
+import { STORAGE_KEYS } from "../src/state/defaults.js";
 
 test("a saved Cloud token survives settings-schema updates", () => {
   const settings = mergeSettings({
@@ -33,11 +34,41 @@ test("legacy non-Cloud credentials are not migrated as Cloud tokens", () => {
   assert.equal(settings.connection.token, "");
 });
 
-test("removes retired bundled rules while preserving custom rules", () => {
-  const sites = removeRetiredBundledRules([
-    { id: "default-old-rule", hostname: "retired.example" },
-    { id: "custom-rule", hostname: "kept.example" },
-  ]);
+test("saved site rules survive state reloads regardless of their legacy IDs", async (context) => {
+  const stored = {
+    [STORAGE_KEYS.SITES]: [{ id: "default-old-rule", hostname: "kept.example" }],
+  };
+  globalThis.browser = storageMock(stored);
+  context.after(() => { delete globalThis.browser; });
 
-  assert.deepEqual(sites, [{ id: "custom-rule", hostname: "kept.example" }]);
+  const state = await loadState();
+  assert.deepEqual(state.sites, stored[STORAGE_KEYS.SITES]);
+  assert.deepEqual(stored[STORAGE_KEYS.SITES_BACKUP], state.sites);
 });
+
+test("site storage writes a local backup and can restore from it", async (context) => {
+  const stored = {};
+  globalThis.browser = storageMock(stored);
+  context.after(() => { delete globalThis.browser; });
+  const sites = [{ id: "custom-rule", hostname: "kept.example" }];
+
+  await saveSites(sites);
+  assert.deepEqual(stored[STORAGE_KEYS.SITES], sites);
+  assert.deepEqual(stored[STORAGE_KEYS.SITES_BACKUP], sites);
+  delete stored[STORAGE_KEYS.SITES];
+  assert.deepEqual((await loadState()).sites, sites);
+});
+
+function storageMock(stored) {
+  return {
+    runtime: { getManifest: () => ({ manifest_version: 2 }) },
+    storage: {
+      local: {
+        async get(keys) {
+          return Object.fromEntries(keys.filter((key) => key in stored).map((key) => [key, stored[key]]));
+        },
+        async set(values) { Object.assign(stored, structuredClone(values)); },
+      },
+    },
+  };
+}

@@ -14,14 +14,36 @@ export function completedCycleRecords(previous, current, observedAt = Date.now()
 }
 
 export function mergeCycleHistory(history, candidates) {
-  const existing = Array.isArray(history) ? history : [];
+  const existing = compactCycleHistory(history);
   if (!candidates.length) return existing;
-  const ids = new Set(existing.map((record) => record.id));
-  const additions = candidates.filter((record) => record && !ids.has(record.id));
+  const keys = new Set(existing.map(logicalCycleKey));
+  const additions = compactCycleHistory(candidates)
+    .filter((record) => record && !keys.has(logicalCycleKey(record)));
   if (!additions.length) return existing;
   return [...existing, ...additions]
     .sort((a, b) => a.completedAt - b.completedAt)
     .slice(-MAX_HISTORY);
+}
+
+export function compactCycleHistory(history) {
+  const source = Array.isArray(history) ? history : [];
+  const records = source
+    .filter((record) => record && Number.isFinite(Number(record.completedAt)))
+    .sort((a, b) => a.completedAt - b.completedAt);
+  const compacted = [];
+  const keys = new Set();
+
+  for (const record of records) {
+    const key = logicalCycleKey(record);
+    if (keys.has(key)) continue;
+    keys.add(key);
+    const id = canonicalCycleId(record);
+    compacted.push(record.id === id ? record : { ...record, id });
+  }
+  const result = compacted.slice(-MAX_HISTORY);
+  const unchanged = result.length === source.length
+    && result.every((record, index) => record === source[index]);
+  return unchanged ? source : result;
 }
 
 export function historySince(history, period, now = Date.now()) {
@@ -71,8 +93,10 @@ function recordFromTransition(previous, current, observedAt) {
 function makeRecord(sessionId, intervalIndex, startedAt, completedAt, durationMs) {
   const completionBucket = Math.round(completedAt / 30000);
   const kind = intervalIndex
-    ? `interval:${intervalIndex}:${completionBucket}`
-    : `simple:${completionBucket}`;
+    ? `interval:${intervalIndex}`
+    : sessionId
+      ? "simple"
+      : `simple:${completionBucket}`;
   return {
     id: `${sessionId ?? "timer"}:${kind}`,
     sessionId: sessionId ?? null,
@@ -81,6 +105,20 @@ function makeRecord(sessionId, intervalIndex, startedAt, completedAt, durationMs
     completedAt: Math.round(completedAt),
     durationMs: durationMs ? Math.round(durationMs) : null,
   };
+}
+
+function logicalCycleKey(record) {
+  if (record.sessionId && positiveInteger(record.intervalIndex)) {
+    return `${record.sessionId}:interval:${record.intervalIndex}`;
+  }
+  if (record.sessionId && record.intervalIndex == null) {
+    return `${record.sessionId}:simple`;
+  }
+  return String(record.id ?? `legacy:${record.completedAt}`);
+}
+
+function canonicalCycleId(record) {
+  return logicalCycleKey(record);
 }
 
 function positiveNumber(value) {

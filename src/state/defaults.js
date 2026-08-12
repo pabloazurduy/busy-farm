@@ -1,6 +1,7 @@
 export const STORAGE_KEYS = Object.freeze({
   SETTINGS: "busyForestSettings",
   SITES: "busyForestSites",
+  SITES_BACKUP: "busyFarmSitesBackup",
   RUNTIME: "busyForestRuntime",
   DIAGNOSTICS: "busyForestDiagnostics",
   HISTORY: "busyFarmHistory",
@@ -8,7 +9,6 @@ export const STORAGE_KEYS = Object.freeze({
 
 export const DEFAULT_SETTINGS = Object.freeze({
   schemaVersion: 2,
-  removedDefaultSitesVersion: 1,
   onboardingComplete: false,
   connection: {
     transport: "cloud",

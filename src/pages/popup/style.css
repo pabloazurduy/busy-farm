@@ -32,7 +32,7 @@ body { width: 390px; min-height: 590px; }
 .timer { position: relative; z-index: 2; margin: 5px 0 0; color: #5a3d1e; font-family: var(--display); font-size: 49px; font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: -.055em; line-height: 1; }
 .timer.word { margin-top: 10px; font-size: 34px; letter-spacing: .06em; }
 .instrument .egg-figure { --egg-scale: .59; position: relative; z-index: 1; margin-top: 3px; }
-.growth-note { position: relative; z-index: 2; display: inline-flex; min-height: 34px; align-items: center; justify-content: center; margin: 2px 0 0; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 247 / 74%); color: var(--ink-soft); font-size: 11px; }
+.growth-note { position: relative; z-index: 2; display: inline-flex; min-height: 34px; align-items: center; justify-content: center; margin: 2px 0 0; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass-bg); color: var(--ink-soft); font-size: 11px; }
 .instrument[data-mode="focus"] .growth-note { border-color: #c6d3b3; background: var(--focus-soft); color: var(--focus-deep); }
 .instrument[data-mode="break"] .growth-note { border-color: #e9cf9d; background: var(--break-soft); color: #795a27; }
 
