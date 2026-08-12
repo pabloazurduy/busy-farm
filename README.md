@@ -10,9 +10,9 @@ The project has no runtime or build dependencies. One source tree produces a rel
 
 ## Screenshots
 
-| Focus timer | Completed-cycle farm |
+| Focus timer  |
 | --- | --- |
-| ![Busy Farm popup showing a focus timer and circular progress indicator](docs/screenshots/popup-focus.png) | ![Busy Farm weekly chicken farm showing completed focus cycles](docs/screenshots/chicken-farm.png) |
+| ![Busy Farm popup showing a focus timer and circular progress indicator](docs/screenshots/popup-focus.png)  |
 
 ![Busy Farm Year view showing two completed focus cycles as chickens](docs/screenshots/chicken-farm-year.png)
 
