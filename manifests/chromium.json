@@ -18,16 +18,7 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://api.busy.app/*",
-    "*://*.instagram.com/*",
-    "*://*.facebook.com/*",
-    "*://*.youtube.com/*",
-    "*://*.linkedin.com/*",
-    "*://*.news.ycombinator.com/*",
-    "*://*.reddit.com/*",
-    "*://*.amazon.nl/*",
-    "*://*.amazon.com/*",
-    "*://*.bol.com/*"
+    "https://api.busy.app/*"
   ],
   "optional_host_permissions": [
     "*://*/*"

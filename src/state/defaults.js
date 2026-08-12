@@ -8,7 +8,7 @@ export const STORAGE_KEYS = Object.freeze({
 
 export const DEFAULT_SETTINGS = Object.freeze({
   schemaVersion: 2,
-  defaultSitesVersion: 1,
+  removedDefaultSitesVersion: 1,
   onboardingComplete: false,
   connection: {
     transport: "cloud",

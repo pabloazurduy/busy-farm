@@ -1,6 +1,5 @@
 import { extensionApi } from "../shared/platform.js";
 import { DEFAULT_RUNTIME, DEFAULT_SETTINGS, STORAGE_KEYS } from "./defaults.js";
-import { DEFAULT_SITE_SET_VERSION, mergeDefaultSites } from "./default-sites.js";
 
 export async function loadState() {
   const api = extensionApi();
@@ -15,9 +14,11 @@ export async function loadState() {
   let settings = mergeSettings(storedSettings);
   let sites = Array.isArray(stored[STORAGE_KEYS.SITES]) ? stored[STORAGE_KEYS.SITES] : [];
 
-  if (Number(storedSettings?.defaultSitesVersion ?? 0) < DEFAULT_SITE_SET_VERSION) {
-    sites = mergeDefaultSites(sites);
-    settings = { ...settings, defaultSitesVersion: DEFAULT_SITE_SET_VERSION };
+  if (Number(storedSettings?.removedDefaultSitesVersion ?? 0) < 1) {
+    // Remove only rules created by the retired bundled-site migration. Rules
+    // created manually keep their own IDs and are intentionally preserved.
+    sites = removeRetiredBundledRules(sites);
+    settings = { ...settings, removedDefaultSitesVersion: 1 };
     await api.storage.local.set({
       [STORAGE_KEYS.SETTINGS]: settings,
       [STORAGE_KEYS.SITES]: sites,
@@ -35,6 +36,11 @@ export async function loadState() {
       ? stored[STORAGE_KEYS.HISTORY]
       : [],
   };
+}
+
+export function removeRetiredBundledRules(sites) {
+  return (Array.isArray(sites) ? sites : [])
+    .filter((site) => !String(site.id ?? "").startsWith("default-"));
 }
 
 export function mergeSettings(stored) {

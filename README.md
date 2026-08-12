@@ -18,17 +18,13 @@ The project has no runtime or build dependencies. One source tree produces a rel
   <img src="docs/screenshots/chicken-farm-year.png" alt="Busy Farm Year view showing two completed focus cycles as chickens" width="880">
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/blocked-page.png" alt="Busy Farm blocking reddit.com during an active BUSY focus cycle" width="880">
-</p>
-
 ## What is implemented
 
 - BUSY Cloud connection through the official internet API.
 - Current snapshot polling through the official `/busybar/busy/snapshot` API.
 - `NOT_STARTED`, `INFINITE`, `SIMPLE`, and `INTERVAL` timer modes.
 - Work, pause, break, disconnect-grace, and session-end policies.
-- Nine useful default block rules plus custom domains with optional subdomain coverage.
+- Custom domains with optional subdomain coverage.
 - Blocking of new navigations and already-open matching tabs.
 - Automatic restoration of redirected tabs after focus, when possible.
 - Toolbar popup with live phase, countdown, connection state, and one-click current-site addition.
@@ -67,7 +63,7 @@ You can run the stages separately with `npm test`, `npm run build`, and `npm run
 4. Select **Load Temporary Add-on…**.
 5. Choose `dist/firefox/manifest.json` from this repository.
 6. Open the Busy Farm toolbar button, then select **Settings**.
-7. Configure the BUSY Cloud token. The default block list is installed automatically.
+7. Configure the BUSY Cloud token, then add the websites you want to block.
 
 Firefox removes a temporary extension when the browser exits. Reload it from the same `about:debugging` page after code changes. Permanent distribution requires packaging and signing through Mozilla Add-ons; that is intentionally outside this local development build.
 
@@ -116,22 +112,6 @@ BUSY Cloud returns timestamped snapshots. Busy Farm accounts for the age of a ca
 
 The public snapshot API does not expose an account-wide historical cycle archive. Busy Farm records completed work intervals locally while the extension is running and reconstructs earlier completed intervals in the current active interval session when the snapshot contains enough timing data. The Farm view can display the locally observed record for the past week, month, or year.
 
-## Default block list
-
-On first installation—or once when updating from the original build—Busy Farm adds these enabled rules with subdomain coverage:
-
-- `instagram.com`
-- `facebook.com`
-- `youtube.com`
-- `linkedin.com`
-- `news.ycombinator.com`
-- `reddit.com`
-- `amazon.nl`
-- `amazon.com`
-- `bol.com`
-
-The migration is versioned. Removing or disabling one of these rules afterward is respected; it will not be silently restored on the next reload.
-
 ## Test without a BUSY Bar
 
 The settings page includes an in-extension phase override for Idle, Focus, Paused, and Break. It exercises blocking without a token or device. Set it back to **Live BUSY device** when finished. The standalone simulator remains available through `npm run simulator` for parser and client development, but the Cloud-only settings UI intentionally does not expose arbitrary local endpoints.
@@ -154,7 +134,7 @@ tests/                 Unit tests and local simulator
 
 - Website rules, credentials, runtime state, and diagnostics remain in local extension storage.
 - Exported settings omit the BUSY credential.
-- Host access for BUSY Cloud and the default domains is declared in the extension manifest. Custom site access is requested only when a custom rule is added or imported.
+- Host access for BUSY Cloud is declared in the extension manifest. Site access is requested only when a rule is added or imported.
 - Only top-level HTTP and HTTPS navigations are redirected; subresources are not filtered.
 - On connection loss during a known focus session, blocking continues only through a bounded grace window. A timed session uses its expected end plus 30 seconds; an infinite session uses two minutes from the last successful snapshot.
 - The extension never sends commands to start, pause, or modify the BUSY timer. It is a read-only follower of the device state.

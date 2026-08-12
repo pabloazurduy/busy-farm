@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { CLOUD_BASE_URL } from "../src/busy/connection.js";
-import { mergeSettings } from "../src/state/storage.js";
+import { mergeSettings, removeRetiredBundledRules } from "../src/state/storage.js";
 
 test("a saved Cloud token survives settings-schema updates", () => {
   const settings = mergeSettings({
@@ -31,4 +31,13 @@ test("legacy non-Cloud credentials are not migrated as Cloud tokens", () => {
 
   assert.equal(settings.connection.transport, "cloud");
   assert.equal(settings.connection.token, "");
+});
+
+test("removes retired bundled rules while preserving custom rules", () => {
+  const sites = removeRetiredBundledRules([
+    { id: "default-old-rule", hostname: "retired.example" },
+    { id: "custom-rule", hostname: "kept.example" },
+  ]);
+
+  assert.deepEqual(sites, [{ id: "custom-rule", hostname: "kept.example" }]);
 });
