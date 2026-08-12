@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **This project is 100% vibe coded.** (ChatGPT SOL xHigh) Its design, implementation, tests, and documentation were produced through iterative prompting and AI-assisted development. Review the source and security assumptions yourself before relying on it.
-> I make in an afternoon after frustration of not being able to connect the [BUSY Bar](https://busy.app/) with the [Forest app](https://forestapp.cc/) extension to block sites in the browser. 
+> I made it in an afternoon after being unable to connect the [BUSY Bar](https://busy.app/) with the [Forest app](https://forestapp.cc/) browser extension to block sites.
 
 Busy Farm is a Firefox-first website blocker synchronized with a [BUSY Bar](https://busy.app/). When the device reports a running work phase, configured websites are redirected to a local focus screen. Break, idle, and completed phases release the block.
 
@@ -10,13 +10,17 @@ The project has no runtime or build dependencies. One source tree produces a rel
 
 ## Screenshots
 
-| Focus timer  |
-| --- | --- |
-| ![Busy Farm popup showing a focus timer and circular progress indicator](docs/screenshots/popup-focus.png)  |
+<p align="center">
+  <img src="docs/screenshots/popup-focus.png" alt="Busy Farm popup with a focus timer and circular progress indicator" width="390">
+</p>
 
-![Busy Farm Year view showing two completed focus cycles as chickens](docs/screenshots/chicken-farm-year.png)
+<p align="center">
+  <img src="docs/screenshots/chicken-farm-year.png" alt="Busy Farm Year view showing two completed focus cycles as chickens" width="880">
+</p>
 
-![Busy Farm blocking reddit.com during an active BUSY focus cycle](docs/screenshots/blocked-page.png)
+<p align="center">
+  <img src="docs/screenshots/blocked-page.png" alt="Busy Farm blocking reddit.com during an active BUSY focus cycle" width="880">
+</p>
 
 ## What is implemented
 
