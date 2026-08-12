@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "Busy Farm",
+  "version": "0.4.0",
+  "description": "Block distracting sites while your BUSY Bar work phase is running.",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "declarativeNetRequestWithHostAccess",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://api.busy.app/*",
+    "*://*.instagram.com/*",
+    "*://*.facebook.com/*",
+    "*://*.youtube.com/*",
+    "*://*.linkedin.com/*",
+    "*://*.news.ycombinator.com/*",
+    "*://*.reddit.com/*",
+    "*://*.amazon.nl/*",
+    "*://*.amazon.com/*",
+    "*://*.bol.com/*"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Busy Farm",
+    "default_popup": "pages/popup/index.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png"
+    }
+  },
+  "options_page": "pages/options/index.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "pages/blocked/*",
+        "pages/shared.css",
+        "shared/*.js",
+        "assets/icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

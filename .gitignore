@@ -1,0 +1,6 @@
+dist/
+artifacts/
+node_modules/
+.npm-cache/
+.DS_Store
+

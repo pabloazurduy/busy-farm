@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Busy Farm · Focus in progress</title>
+    <link rel="icon" href="../../assets/icons/icon-32.png">
+    <link rel="stylesheet" href="../shared.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body data-mode="focus">
+    <main class="blocked-shell">
+      <header class="blocked-header">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <span class="brand-name">Busy Farm</span>
+            <span class="brand-subtitle">A quiet boundary for this session</span>
+          </div>
+        </div>
+        <span class="hardware-link"><i></i> BUSY Cloud synced</span>
+      </header>
+
+      <section class="focus-stage card" aria-live="polite">
+        <div class="focus-copy">
+          <p class="eyebrow">Focus boundary</p>
+          <h1>Stay with the work<br>you already chose.</h1>
+          <p class="blocked-copy"><strong id="blocked-host">This site</strong> can wait until the BUSY focus phase ends.</p>
+
+          <div class="time-cluster">
+            <span>Time remaining</span>
+            <strong id="remaining">--:--</strong>
+            <em id="phase">Focus</em>
+          </div>
+
+          <div class="return-row">
+            <button class="button" id="return" type="button" disabled>Return when available</button>
+            <p class="quiet-note" id="status-note">This page will return automatically after focus.</p>
+          </div>
+        </div>
+
+        <div class="focus-companion" aria-hidden="true">
+          <div class="halo"></div>
+          <div class="egg-figure">
+            <span class="egg-ground"></span>
+            <span class="sprig left"></span>
+            <span class="sprig right"></span>
+            <span class="egg-shell"><i class="egg-crack"></i></span>
+          </div>
+          <p>Small choices become steady progress.</p>
+        </div>
+      </section>
+
+      <footer class="blocked-footer">
+        <span>Your block list stays in this browser.</span>
+        <span>One task · one quiet window</span>
+      </footer>
+    </main>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

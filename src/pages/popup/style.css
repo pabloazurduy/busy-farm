@@ -1,0 +1,46 @@
+body { width: 390px; min-height: 590px; }
+
+.popup-shell { display: grid; gap: 13px; padding: 17px; }
+.topbar { display: flex; min-height: 42px; align-items: center; justify-content: space-between; }
+.brand-subtitle { display: block; margin-top: 1px; color: var(--faint); font-size: 10px; letter-spacing: .025em; }
+
+.instrument { position: relative; overflow: hidden; padding: 18px 20px 20px; text-align: center; }
+.instrument::before { content: ""; position: absolute; width: 190px; height: 190px; top: 64px; left: 50%; border-radius: 50%; box-shadow: 0 0 0 25px rgb(114 134 90 / 3%), 0 0 0 50px rgb(114 134 90 / 2%); transform: translateX(-50%); pointer-events: none; }
+.instrument-head { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.connection-label { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--muted); font-size: 10px; }
+.connection-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 4px rgb(184 95 87 / 10%); }
+.instrument[data-mode="focus"] .connection-dot,
+.instrument[data-mode="break"] .connection-dot,
+.instrument[data-mode="idle"] .connection-dot,
+.instrument[data-mode="paused"] .connection-dot { background: var(--focus); box-shadow: 0 0 0 4px rgb(114 134 90 / 11%); }
+.rule-count { padding: 4px 8px; border-radius: 999px; background: var(--panel-tint); color: var(--ink-soft); font-size: 10px; }
+
+.timer-dial { position: relative; display: grid; width: 250px; height: 250px; place-items: center; margin: 3px auto 0; }
+.progress-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+.progress-track, .progress-value { fill: none; stroke-width: 5; }
+.progress-track { stroke: rgb(114 134 90 / 10%); }
+.progress-value { stroke: var(--focus); stroke-linecap: round; transition: stroke-dashoffset 300ms linear, stroke 180ms ease; }
+.instrument[data-mode="break"] .progress-value { stroke: var(--break); }
+.instrument[data-mode="paused"] .progress-value { stroke: #a28b69; }
+.instrument[data-mode="disconnected"] .progress-value { stroke: var(--danger); opacity: .45; }
+.dial-content { position: relative; z-index: 1; display: grid; justify-items: center; }
+.phase-lockup { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 0; }
+.phase-lockup h1 { margin: 0; color: var(--focus-deep); font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: .02em; }
+.phase-leaf { width: 12px; height: 17px; border-radius: 90% 10% 80% 20%; background: #8da36e; transform: rotate(32deg); }
+.phase-leaf::after { content: ""; display: block; width: 1px; height: 13px; margin: 7px 0 0 3px; background: var(--focus-deep); transform: rotate(34deg); transform-origin: top; }
+
+.timer { position: relative; z-index: 2; margin: 5px 0 0; color: #5a3d1e; font-family: var(--display); font-size: 49px; font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: -.055em; line-height: 1; }
+.timer.word { margin-top: 10px; font-size: 34px; letter-spacing: .06em; }
+.instrument .egg-figure { --egg-scale: .59; position: relative; z-index: 1; margin-top: 3px; }
+.growth-note { position: relative; z-index: 2; display: inline-flex; min-height: 34px; align-items: center; justify-content: center; margin: 2px 0 0; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 247 / 74%); color: var(--ink-soft); font-size: 11px; }
+.instrument[data-mode="focus"] .growth-note { border-color: #c6d3b3; background: var(--focus-soft); color: var(--focus-deep); }
+.instrument[data-mode="break"] .growth-note { border-color: #e9cf9d; background: var(--break-soft); color: #795a27; }
+
+.current-site { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; }
+.site-copy { min-width: 0; }
+.site-copy .eyebrow { margin-bottom: 4px; }
+.site-copy strong, .site-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-copy strong { font-size: 14px; }
+.site-copy span { margin-top: 3px; color: var(--muted); font-size: 11px; }
+
+.popup-footer { display: flex; min-height: 30px; align-items: center; justify-content: space-between; padding: 0 3px; color: var(--faint); font-size: 10px; }

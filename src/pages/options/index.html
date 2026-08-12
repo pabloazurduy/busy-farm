@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Busy Farm settings</title>
+    <link rel="icon" href="../../assets/icons/icon-32.png">
+    <link rel="stylesheet" href="../shared.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <span class="brand-name">Busy Farm</span>
+            <span class="brand-subtitle">Focus companion</span>
+          </div>
+        </div>
+        <div class="live-pill" id="live-pill"><span></span><strong id="live-phase">Connecting</strong><em id="live-time">--:--</em></div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="rail" aria-label="Settings sections">
+        <a href="#connection"><i></i> Connection</a>
+        <a href="#sites"><i></i> Block list</a>
+        <a href="#farm"><i></i> Farm</a>
+        <a href="#behavior"><i></i> Behavior</a>
+        <a href="#tools"><i></i> Tools</a>
+      </aside>
+
+      <div class="content">
+        <section class="page-intro">
+          <div>
+            <p class="eyebrow">Build a quieter workday</p>
+            <h1>Your focus farm</h1>
+            <p>Busy Farm follows your BUSY timer, keeps distractions outside the fence, and adds a chicken for every completed focus cycle.</p>
+          </div>
+          <div class="intro-egg" aria-hidden="true"><span class="brand-mark"></span><i></i><b></b></div>
+        </section>
+        <div class="notice error hidden" id="global-error" role="alert"></div>
+        <div class="notice hidden" id="chromium-note">This Chromium build is useful for interface and blocking tests, but its background worker can sleep. For dependable 1–2 second BUSY polling, use Firefox.</div>
+
+        <section class="settings-section" id="connection">
+          <div class="section-heading">
+            <div><p class="eyebrow">Timer source</p><h2>BUSY connection</h2></div>
+            <span class="section-state" id="connection-state">Not tested</span>
+          </div>
+          <div class="card section-card">
+            <form id="connection-form">
+              <div class="form-grid">
+                <div class="field">
+                  <label>Connection</label>
+                  <div class="fixed-connection"><span></span><strong>BUSY Cloud</strong></div>
+                  <p class="field-hint">Follows the timer synchronized by your BUSY app and physical Bar.</p>
+                </div>
+                <div class="field grow">
+                  <label>BUSY API endpoint</label>
+                  <div class="fixed-endpoint"><code>https://api.busy.app/busybar</code></div>
+                  <p class="field-hint">Fixed to BUSY’s official internet API.</p>
+                </div>
+              </div>
+              <div class="field token-field">
+                <label for="token">BUSY Cloud API token <span>(required)</span></label>
+                <input id="token" name="token" type="password" autocomplete="off" placeholder="Leave empty to keep the saved credential">
+                <p class="field-hint" id="token-status">No credential saved.</p>
+                <p class="field-hint">Stored in this browser profile and preserved across Busy Farm updates. <a href="https://cloud.busy.app/api-tokens" target="_blank" rel="noreferrer">Create a BUSY Cloud API token ↗</a></p>
+              </div>
+              <div class="form-actions">
+                <button class="button" id="test-connection" type="button">Test connection</button>
+                <button class="button primary" id="save-connection" type="submit">Save and monitor</button>
+              </div>
+              <div class="notice hidden" id="connection-result" role="status"></div>
+            </form>
+          </div>
+        </section>
+
+        <section class="settings-section" id="farm">
+          <div class="section-heading">
+            <div><p class="eyebrow">Completed focus cycles</p><h2>Chicken farm</h2></div>
+            <span class="section-state" id="farm-count">0 chickens</span>
+          </div>
+          <div class="card farm-card">
+            <div class="farm-toolbar">
+              <div>
+                <strong id="farm-title">The past 7 days</strong>
+                <span id="farm-subtitle">Each chicken is one completed BUSY focus cycle.</span>
+              </div>
+              <div class="period-tabs" role="group" aria-label="Farm period">
+                <button class="period-tab active" type="button" data-period="week" aria-pressed="true">Week</button>
+                <button class="period-tab" type="button" data-period="month" aria-pressed="false">Month</button>
+                <button class="period-tab" type="button" data-period="year" aria-pressed="false">Year</button>
+              </div>
+            </div>
+            <div class="farm-field" id="farm-field" aria-live="polite">
+              <div class="farm-barn" aria-hidden="true"><i></i><b></b><span></span></div>
+              <div class="chicken-yard" id="chicken-yard"></div>
+              <p class="farm-empty" id="farm-empty">Finish a BUSY focus cycle to welcome your first chicken.</p>
+            </div>
+            <div class="farm-days" id="farm-days"></div>
+            <p class="farm-note">Recorded locally while Busy Farm observes BUSY. The BUSY Cloud API does not provide a historical cycle archive.</p>
+          </div>
+        </section>
+
+        <section class="settings-section" id="sites">
+          <div class="section-heading">
+            <div><p class="eyebrow">Focus boundaries</p><h2>Block list</h2></div>
+            <span class="section-state" id="site-count">0 sites</span>
+          </div>
+          <div class="card section-card">
+            <form class="site-form" id="site-form">
+              <div class="field site-input">
+                <label for="site-host">Website or domain</label>
+                <input id="site-host" type="text" spellcheck="false" autocomplete="off" placeholder="youtube.com or https://news.example.com">
+              </div>
+              <label class="subdomain-check"><input id="site-subdomains" type="checkbox" checked> Include subdomains</label>
+              <button class="button primary" type="submit">Add rule</button>
+            </form>
+            <div class="rule-divider"></div>
+            <div class="site-list" id="site-list" aria-live="polite"></div>
+            <div class="empty-state hidden" id="site-empty">
+              <strong>Your block list is empty.</strong>
+              <span>Add a domain above, or use “Add” from the toolbar popup.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" id="behavior">
+          <div class="section-heading"><div><p class="eyebrow">Session policy</p><h2>Behavior</h2></div></div>
+          <div class="card section-card behavior-list">
+            <div class="switch-row">
+              <div><strong>Block while the BUSY timer is paused</strong><p>Keep sites unavailable during a paused work interval. Break intervals remain open.</p></div>
+              <label class="switch"><input id="block-paused" type="checkbox"><span></span><b class="sr-only">Block while paused</b></label>
+            </div>
+            <div class="switch-row">
+              <div><strong>Return blocked tabs after focus</strong><p>Restore tabs Busy Farm redirected when the work phase ends.</p></div>
+              <label class="switch"><input id="restore-tabs" type="checkbox"><span></span><b class="sr-only">Restore blocked tabs</b></label>
+            </div>
+            <p class="save-state" id="preference-state" role="status"></p>
+          </div>
+        </section>
+
+        <section class="settings-section" id="tools">
+          <div class="section-heading"><div><p class="eyebrow">Workshop</p><h2>Test and transfer</h2></div></div>
+          <div class="tool-grid">
+            <div class="card tool-card">
+              <h3>BUSY simulator</h3>
+              <p>Override the hardware snapshot locally to verify each phase and blocking behavior.</p>
+              <label class="field-label" for="simulation">Simulated state</label>
+              <select id="simulation">
+                <option value="">Live BUSY device</option>
+                <option value="idle">Idle</option>
+                <option value="work">Focus running</option>
+                <option value="paused">Focus paused</option>
+                <option value="break">Break running</option>
+              </select>
+            </div>
+            <div class="card tool-card">
+              <h3>Settings file</h3>
+              <p>Move your rules and preferences without including the saved BUSY credential.</p>
+              <div class="tool-actions">
+                <button class="button" id="export" type="button">Export JSON</button>
+                <button class="button" id="import-trigger" type="button">Import JSON</button>
+                <input class="hidden" id="import-file" type="file" accept="application/json,.json">
+              </div>
+            </div>
+          </div>
+
+          <details class="card diagnostics">
+            <summary>Recent diagnostics <span>local only</span></summary>
+            <div id="diagnostic-list"></div>
+          </details>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Busy Farm</title>
+    <link rel="icon" href="../../assets/icons/icon-32.png">
+    <link rel="stylesheet" href="../shared.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <span class="brand-name">Busy Farm</span>
+            <span class="brand-subtitle">Cloud focus companion</span>
+          </div>
+        </div>
+        <button class="icon-button" id="refresh" type="button" title="Refresh BUSY status" aria-label="Refresh BUSY status">↻</button>
+      </header>
+
+      <section class="instrument card" id="instrument" data-mode="disconnected" aria-live="polite">
+        <div class="instrument-head">
+          <p class="connection-label"><span class="connection-dot"></span><span id="transport">BUSY Cloud</span></p>
+          <span class="rule-count" id="blocked-count">0 rules</span>
+        </div>
+
+        <div class="timer-dial" id="timer-dial">
+          <svg class="progress-ring" viewBox="0 0 250 250" aria-hidden="true">
+            <circle class="progress-track" cx="125" cy="125" r="118"></circle>
+            <circle class="progress-value" id="progress-value" cx="125" cy="125" r="118"></circle>
+          </svg>
+          <div class="dial-content">
+            <div class="phase-lockup">
+              <span class="phase-leaf" aria-hidden="true"></span>
+              <h1 id="phase">Connecting</h1>
+            </div>
+            <div class="timer" id="timer">--:--</div>
+
+            <div class="egg-figure" aria-hidden="true">
+              <span class="egg-ground"></span>
+              <span class="sprig left"></span>
+              <span class="sprig right"></span>
+              <span class="egg-shell"><i class="egg-crack"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <p class="growth-note" id="blocking-copy">Waiting for BUSY</p>
+      </section>
+
+      <div class="notice error hidden" id="error" role="alert"></div>
+      <div class="notice hidden" id="browser-warning"></div>
+
+      <section class="current-site card">
+        <div class="site-copy">
+          <p class="eyebrow">This tab</p>
+          <strong id="current-host">Reading tab…</strong>
+          <span id="current-detail">Checking whether this page is listed.</span>
+        </div>
+        <button class="button small" id="current-action" type="button" disabled>Add</button>
+      </section>
+
+      <footer class="popup-footer">
+        <span id="last-update">No snapshot yet</span>
+        <button class="button quiet small" id="settings" type="button">Settings</button>
+      </footer>
+    </main>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

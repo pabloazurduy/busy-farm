@@ -1,0 +1,63 @@
+{
+  "manifest_version": 2,
+  "name": "Busy Farm",
+  "version": "0.4.0",
+  "description": "Block distracting sites while your BUSY Bar work phase is running.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "busy-forest@local.pablo",
+      "strict_min_version": "128.0"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "96": "assets/icons/icon-96.png"
+  },
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "https://api.busy.app/*",
+    "*://*.instagram.com/*",
+    "*://*.facebook.com/*",
+    "*://*.youtube.com/*",
+    "*://*.linkedin.com/*",
+    "*://*.news.ycombinator.com/*",
+    "*://*.reddit.com/*",
+    "*://*.amazon.nl/*",
+    "*://*.amazon.com/*",
+    "*://*.bol.com/*"
+  ],
+  "optional_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "Busy Farm",
+    "default_popup": "pages/popup/index.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png"
+    }
+  },
+  "options_ui": {
+    "page": "pages/options/index.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    "pages/blocked/index.html",
+    "pages/blocked/index.js",
+    "pages/blocked/style.css",
+    "pages/shared.css",
+    "shared/*.js",
+    "assets/icons/*.png"
+  ]
+}
