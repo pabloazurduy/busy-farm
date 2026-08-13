@@ -38,6 +38,13 @@ export function friendlyError(error) {
     TRANSPORT_MISMATCH: error.message,
     CREDENTIAL_REQUIRED: error.message,
     NETWORK_ERROR: "BUSY is unreachable from this browser.",
+    TIMER_ALREADY_ACTIVE: error.message,
+    TIMER_NOT_ACTIVE: error.message,
+    TIMER_ALREADY_PAUSED: error.message,
+    TIMER_NOT_PAUSED: error.message,
+    INVALID_TIMER_DURATION: error.message,
+    INVALID_TIMER_ACTION: error.message,
+    SIMULATION_ACTIVE: error.message,
   };
   return known[code] ?? error.message ?? "BUSY is unreachable from this browser.";
 }

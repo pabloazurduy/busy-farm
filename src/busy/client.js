@@ -13,6 +13,14 @@ export class BusyClient {
   }
 
   async getSnapshot(externalSignal) {
+    return this.requestSnapshot("GET", null, externalSignal);
+  }
+
+  async setSnapshot(payload, externalSignal) {
+    return this.requestSnapshot("PUT", payload, externalSignal);
+  }
+
+  async requestSnapshot(method, payload, externalSignal) {
     const controller = new AbortController();
     const onAbort = () => controller.abort(externalSignal?.reason);
     externalSignal?.addEventListener("abort", onAbort, { once: true });
@@ -27,8 +35,9 @@ export class BusyClient {
       const response = await Reflect.apply(this.fetchImpl, globalThis, [
         this.snapshotUrl(),
         {
-          method: "GET",
-          headers: this.headers(),
+          method,
+          headers: this.headers(payload != null),
+          ...(payload == null ? {} : { body: JSON.stringify(payload) }),
           cache: "no-store",
           signal: controller.signal,
         },
@@ -39,13 +48,13 @@ export class BusyClient {
       if (!response.ok) {
         throw new BusyClientError(`BUSY returned HTTP ${response.status}.`, "HTTP_ERROR", response.status);
       }
-      let payload;
+      let responsePayload;
       try {
-        payload = await response.json();
+        responsePayload = await response.json();
       } catch {
         throw new BusyClientError("BUSY returned invalid JSON.", "BAD_RESPONSE", response.status);
       }
-      return { payload, latencyMs: Date.now() - startedAt };
+      return { payload: responsePayload, latencyMs: Date.now() - startedAt };
     } catch (error) {
       if (error instanceof BusyClientError) throw error;
       if (controller.signal.aborted) {
@@ -58,8 +67,9 @@ export class BusyClient {
     }
   }
 
-  headers() {
+  headers(hasJsonBody = false) {
     const headers = { Accept: "application/json" };
+    if (hasJsonBody) headers["Content-Type"] = "application/json";
     const token = String(this.connection.token ?? "").trim();
     if (!token) return headers;
     if (this.connection.transport === "cloud") {

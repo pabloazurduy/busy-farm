@@ -377,3 +377,14 @@ input::placeholder { color: #b2a48f; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+:root { --primary-text: #fffdf8; --primary-hover: #40522f; }
+.button.primary { color: var(--primary-text); }
+.button.primary:hover { border-color: var(--primary-hover); background: var(--primary-hover); }
+:root[data-theme="dark"] { --primary-text: #172013; --primary-hover: #d5e7b9; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary-text: #172013;
+    --primary-hover: #d5e7b9;
+  }
+}

@@ -44,3 +44,34 @@ body { width: 390px; min-height: 590px; }
 .site-copy span { margin-top: 3px; color: var(--muted); font-size: 11px; }
 
 .popup-footer { display: flex; min-height: 30px; align-items: center; justify-content: space-between; padding: 0 3px; color: var(--faint); font-size: 10px; }
+
+:root { --timer-ink: #5a3d1e; --dial-handle: #fffaf0; }
+body { min-height: 620px; }
+.timer-dial { touch-action: none; }
+.timer-dial.editable .progress-ring { transform: rotate(120deg); }
+.dial-slider { position: absolute; inset: 0; z-index: 4; border-radius: 50%; cursor: grab; }
+.dial-slider:active { cursor: grabbing; }
+.dial-slider:focus-visible { outline: 3px solid rgb(114 134 90 / 36%); outline-offset: 5px; }
+.dial-handle { position: absolute; width: 17px; height: 17px; border: 3px solid var(--focus-deep); border-radius: 50%; background: var(--dial-handle); box-shadow: 0 3px 10px rgb(67 48 25 / 22%); pointer-events: none; transform: translate(-50%, -50%); }
+.timer-dial:not(.editable) .dial-slider { pointer-events: none; }
+.timer-dial:not(.editable) .dial-handle { display: none; }
+.timer { color: var(--timer-ink); }
+.duration-tools { position: relative; z-index: 5; display: flex; min-height: 31px; align-items: center; justify-content: center; margin: -5px 0 4px; }
+.edit-time { padding: 5px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 650; }
+.edit-time:hover { background: var(--panel-tint); color: var(--focus-deep); }
+.duration-editor { display: inline-flex; height: 31px; align-items: center; gap: 5px; padding: 3px 5px 3px 8px; border: 1px solid var(--line-bright); border-radius: 999px; background: var(--input-bg); color: var(--muted); font-size: 10px; }
+.duration-editor input { width: 43px; min-height: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-family: var(--display); font-size: 13px; font-weight: 700; text-align: right; }
+.duration-editor input::-webkit-inner-spin-button { appearance: none; }
+.duration-editor button { height: 23px; padding: 0 9px; border: 0; border-radius: 999px; background: var(--focus-deep); color: var(--primary-text); cursor: pointer; font-size: 10px; font-weight: 700; }
+.timer-controls { position: relative; z-index: 5; display: flex; justify-content: center; gap: 8px; margin-top: 11px; }
+.timer-action { min-width: 92px; min-height: 36px; padding: 7px 15px; font-size: 11px; }
+.timer-action.danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); background: transparent; }
+.timer-action.danger:hover { border-color: var(--danger); background: var(--danger-soft); }
+.command-state { min-height: 14px; margin: 7px 0 -5px; color: var(--muted); font-size: 10px; }
+:root[data-theme="dark"] { --timer-ink: #ead8b8; --dial-handle: #1b211a; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --timer-ink: #ead8b8; --dial-handle: #1b211a; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-value { transition: none; }
+}

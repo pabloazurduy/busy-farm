@@ -43,7 +43,7 @@ export function normalizeBusySnapshot(payload, now = Date.now()) {
       paused,
       sessionId,
       remainingMs,
-      durationMs: finiteNumber(snapshot.total_time_ms),
+      durationMs: finiteNumber(snapshot.total_time_ms) ?? remainingMs,
     });
   }
 

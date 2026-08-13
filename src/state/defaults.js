@@ -30,6 +30,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   appearance: {
     theme: "system",
   },
+  timer: {
+    durationMinutes: 25,
+  },
   developer: {
     simulation: null,
   },

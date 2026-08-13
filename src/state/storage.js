@@ -62,6 +62,7 @@ export function mergeSettings(stored) {
     behavior: { ...DEFAULT_SETTINGS.behavior, ...(stored?.behavior ?? {}) },
     polling: { ...DEFAULT_SETTINGS.polling, ...(stored?.polling ?? {}) },
     appearance: { ...DEFAULT_SETTINGS.appearance, ...(stored?.appearance ?? {}) },
+    timer: { ...DEFAULT_SETTINGS.timer, ...(stored?.timer ?? {}) },
     developer: { ...DEFAULT_SETTINGS.developer, ...(stored?.developer ?? {}) },
   };
 }

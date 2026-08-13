@@ -21,6 +21,7 @@ test("normalizes running and paused simple timers", () => {
   assert.equal(running.phase, "WORK_RUNNING");
   assert.equal(running.remainingMs, 90_000);
   assert.equal(running.expectedTransitionAt, NOW + 90_000);
+  assert.equal(running.phaseDurationMs, 90_000);
 
   const paused = normalizeBusySnapshot({
     snapshot: { type: "SIMPLE", card_id: "session", time_left_ms: 80_000, is_paused: true },

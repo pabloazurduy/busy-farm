@@ -68,3 +68,26 @@ test("normalizes a base URL and rejects non-http protocols", () => {
   assert.equal(normalizeBaseUrl("https://example.com/api/?ignored=yes#hash"), "https://example.com/api");
   assert.throws(() => normalizeBaseUrl("file:///tmp/device"), { code: "INVALID_ENDPOINT" });
 });
+
+test("sets a BUSY snapshot with an authenticated JSON PUT", async () => {
+  let request;
+  const client = new BusyClient(
+    { baseUrl: "https://api.busy.app/busybar", transport: "cloud", token: "write-token" },
+    { fetchImpl: async (url, options) => {
+      request = { url, options };
+      return { ok: true, status: 200, json: async () => ({ success: true }) };
+    } },
+  );
+  const command = {
+    snapshot: { type: "NOT_STARTED", busy_bar_settings: {} },
+    snapshot_timestamp_ms: 123,
+  };
+
+  await client.setSnapshot(command);
+
+  assert.equal(request.url, "https://api.busy.app/busybar/busy/snapshot");
+  assert.equal(request.options.method, "PUT");
+  assert.equal(request.options.headers.Authorization, "Bearer write-token");
+  assert.equal(request.options.headers["Content-Type"], "application/json");
+  assert.deepEqual(JSON.parse(request.options.body), command);
+});

@@ -33,6 +33,11 @@
             <circle class="progress-track" cx="125" cy="125" r="118"></circle>
             <circle class="progress-value" id="progress-value" cx="125" cy="125" r="118"></circle>
           </svg>
+          <div class="dial-slider" id="dial-slider" role="slider" tabindex="-1"
+            aria-label="Focus duration" aria-valuemin="0" aria-valuemax="60"
+            aria-valuenow="25" aria-valuetext="25 minutes">
+            <span class="dial-handle" id="dial-handle" aria-hidden="true"></span>
+          </div>
           <div class="dial-content">
             <div class="phase-lockup">
               <span class="phase-leaf" aria-hidden="true"></span>
@@ -49,7 +54,25 @@
           </div>
         </div>
 
+        <div class="duration-tools hidden" id="duration-tools">
+          <button class="edit-time" id="edit-time" type="button">✎ Edit time</button>
+          <form class="duration-editor hidden" id="duration-editor">
+            <label class="sr-only" for="duration-minutes">Focus duration in minutes</label>
+            <input id="duration-minutes" type="number" min="0" max="60" step="1" inputmode="numeric">
+            <span>min</span>
+            <button type="submit" aria-label="Set focus duration">Set</button>
+          </form>
+        </div>
+
         <p class="growth-note" id="blocking-copy">Waiting for BUSY</p>
+
+        <div class="timer-controls hidden" id="timer-controls">
+          <button class="button primary timer-action hidden" id="start-timer" type="button">Start focus</button>
+          <button class="button timer-action hidden" id="pause-timer" type="button">Pause</button>
+          <button class="button primary timer-action hidden" id="resume-timer" type="button">Resume</button>
+          <button class="button danger timer-action hidden" id="cancel-timer" type="button">Cancel</button>
+        </div>
+        <p class="command-state" id="command-state" role="status" aria-live="polite"></p>
       </section>
 
       <div class="notice error hidden" id="error" role="alert"></div>

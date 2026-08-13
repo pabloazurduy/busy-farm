@@ -1,5 +1,6 @@
 import { BusyClient } from "../busy/client.js";
 import { CLOUD_BASE_URL, validateTransportEndpoint } from "../busy/connection.js";
+import { buildTimerCommand, MAX_TIMER_MINUTES } from "../busy/control.js";
 import { normalizeBusySnapshot } from "../busy/normalize.js";
 import { blockingDecision, disconnectedRuntime } from "../busy/policy.js";
 import { BlockEngine } from "../blocking/engine.js";
@@ -37,6 +38,8 @@ export class Coordinator {
     this.history = [];
     this.pollTimer = null;
     this.pollInFlight = null;
+    this.timerCommandInFlight = null;
+    this.suppressedCompletionSessionId = null;
     this.failureCount = 0;
     this.stopped = false;
   }
@@ -88,6 +91,7 @@ export class Coordinator {
   }
 
   async pollOnce({ connection = this.settings.connection, testOnly = false } = {}) {
+    if (this.timerCommandInFlight && !testOnly) return this.timerCommandInFlight;
     if (this.pollInFlight && !testOnly) return this.pollInFlight;
     const task = this.performPoll(connection, testOnly);
     if (!testOnly) this.pollInFlight = task;
@@ -109,6 +113,15 @@ export class Coordinator {
         ? { payload: simulatedPayload(simulation), latencyMs: 0 }
         : await new BusyClient(connection, { timeoutMs: this.settings.polling.timeoutMs }).getSnapshot();
       const normalized = normalizeBusySnapshot(result.payload);
+      if (normalized.snapshotType === "SIMPLE") {
+        const sameSession = normalized.sessionId && normalized.sessionId === this.runtime.sessionId;
+        const priorDuration = sameSession ? Number(this.runtime.phaseDurationMs) : 0;
+        const observedDuration = Number(normalized.phaseDurationMs);
+        normalized.phaseDurationMs = Math.max(
+          Number.isFinite(priorDuration) ? priorDuration : 0,
+          Number.isFinite(observedDuration) ? observedDuration : 0,
+        ) || null;
+      }
       if (testOnly) return { normalized, latencyMs: result.latencyMs };
       if (
         this.runtime.lastSnapshotTimestamp != null
@@ -125,7 +138,10 @@ export class Coordinator {
         ...normalized,
         sourceTransport: simulation ? "simulation" : connection.transport,
       };
-      if (!simulation) {
+      const completionSuppressed = this.suppressedCompletionSessionId != null
+        && (previousRuntime.sessionId === this.suppressedCompletionSessionId
+          || this.runtime.sessionId === this.suppressedCompletionSessionId);
+      if (!simulation && !completionSuppressed) {
         const nextHistory = mergeCycleHistory(
           this.history,
           completedCycleRecords(previousRuntime, this.runtime),
@@ -134,6 +150,11 @@ export class Coordinator {
           this.history = nextHistory;
           await saveHistory(this.history);
         }
+      }
+      if (this.suppressedCompletionSessionId != null
+        && (this.runtime.phase === "IDLE"
+          || (this.runtime.sessionId && this.runtime.sessionId !== this.suppressedCompletionSessionId))) {
+        this.suppressedCompletionSessionId = null;
       }
       this.runtime.blockingActive = blockingDecision(this.runtime, this.settings);
       await this.commitRuntime(previousBlocking);
@@ -253,6 +274,16 @@ export class Coordinator {
           return ok(await this.saveConnection(payload.connection));
         case MESSAGE.SAVE_PREFERENCES:
           return ok(await this.savePreferences(payload));
+        case MESSAGE.SAVE_TIMER_DURATION:
+          return ok(await this.saveTimerDuration(payload.durationMinutes));
+        case MESSAGE.START_TIMER:
+          return ok(await this.controlTimer("start", payload));
+        case MESSAGE.PAUSE_TIMER:
+          return ok(await this.controlTimer("pause"));
+        case MESSAGE.RESUME_TIMER:
+          return ok(await this.controlTimer("resume"));
+        case MESSAGE.CANCEL_TIMER:
+          return ok(await this.controlTimer("cancel"));
         case MESSAGE.ADD_SITE:
           return ok(await this.addSite(payload));
         case MESSAGE.REMOVE_SITE:
@@ -316,6 +347,57 @@ export class Coordinator {
     const previousBlocking = this.runtime.blockingActive;
     this.runtime.blockingActive = blockingDecision(this.runtime, this.settings);
     await this.commitRuntime(previousBlocking);
+    return this.publicState();
+  }
+
+  async saveTimerDuration(value) {
+    const durationMinutes = Number(value);
+    if (!Number.isInteger(durationMinutes) || durationMinutes < 0 || durationMinutes > MAX_TIMER_MINUTES) {
+      throw Object.assign(new Error("Choose a focus time from 0 to 60 minutes."), {
+        code: "INVALID_TIMER_DURATION",
+      });
+    }
+    this.settings = mergeSettings({
+      ...this.settings,
+      timer: { ...this.settings.timer, durationMinutes },
+    });
+    await saveSettings(this.settings);
+    return this.publicState();
+  }
+
+  async controlTimer(action, payload = {}) {
+    if (this.settings.developer.simulation) {
+      throw Object.assign(new Error("Switch the simulator back to Live BUSY device before controlling the timer."), {
+        code: "SIMULATION_ACTIVE",
+      });
+    }
+    if (this.timerCommandInFlight) return this.timerCommandInFlight;
+    const task = this.performTimerCommand(action, payload);
+    this.timerCommandInFlight = task;
+    try {
+      return await task;
+    } finally {
+      this.timerCommandInFlight = null;
+    }
+  }
+
+  async performTimerCommand(action, payload) {
+    if (this.pollInFlight) await this.pollInFlight;
+    const connection = validateConnection({ token: this.settings.connection.token });
+    await this.requireOriginPermission(permissionPatternForEndpoint(connection.baseUrl));
+    const client = new BusyClient(connection, { timeoutMs: this.settings.polling.timeoutMs });
+    const current = await client.getSnapshot();
+    const command = buildTimerCommand(current.payload, action, {
+      durationMinutes: payload.durationMinutes,
+    });
+    await client.setSnapshot(command);
+    if (action === "cancel") {
+      this.suppressedCompletionSessionId = current.payload?.snapshot?.card_id ?? this.runtime.sessionId;
+    }
+    await this.performPoll(connection, false);
+    await this.log(`timer_${action}`, action === "start"
+      ? { durationMinutes: payload.durationMinutes }
+      : {});
     return this.publicState();
   }
 
@@ -400,6 +482,7 @@ export class Coordinator {
       settings: {
         behavior: { ...this.settings.behavior },
         appearance: { ...this.settings.appearance },
+        timer: { ...this.settings.timer },
       },
       sites: this.sites,
     };
@@ -423,6 +506,7 @@ export class Coordinator {
     await Promise.all(sites.map((site) => this.requireOriginPermission(site.permissionPattern)));
     const importedBehavior = data.settings?.behavior ?? {};
     const importedTheme = data.settings?.appearance?.theme;
+    const importedDuration = Number(data.settings?.timer?.durationMinutes);
     this.settings = mergeSettings({
       ...this.settings,
       behavior: {
@@ -435,6 +519,11 @@ export class Coordinator {
         theme: new Set(["system", "light", "dark"]).has(importedTheme)
           ? importedTheme
           : this.settings.appearance.theme,
+      },
+      timer: {
+        ...this.settings.timer,
+        durationMinutes: Number.isInteger(importedDuration) && importedDuration >= 0 && importedDuration <= MAX_TIMER_MINUTES
+          ? importedDuration : this.settings.timer.durationMinutes,
       },
       developer: { ...this.settings.developer, simulation: null },
     });

@@ -22,12 +22,13 @@ The project has no runtime or build dependencies. One source tree produces a rel
 
 - BUSY Cloud connection through the official internet API.
 - Current snapshot polling through the official `/busybar/busy/snapshot` API.
+- Start, pause, resume, and cancel BUSY timers from the toolbar popup through the official snapshot API.
 - `NOT_STARTED`, `INFINITE`, `SIMPLE`, and `INTERVAL` timer modes.
 - Work, pause, break, disconnect-grace, and session-end policies.
 - Custom domains with optional subdomain coverage.
 - Blocking of new navigations and already-open matching tabs.
 - Automatic restoration of redirected tabs after focus, when possible.
-- Toolbar popup with live phase, countdown, connection state, and one-click current-site addition.
+- Toolbar popup with a draggable 0–60 minute egg timer, exact minute editing, live phase, countdown, and one-click current-site addition.
 - Settings interface for connection, rules, behavior, simulation, diagnostics, import, and export.
 - Firefox Manifest V2 and Chromium Manifest V3 outputs from the same source.
 - Unit tests plus a local BUSY API simulator.
@@ -98,13 +99,13 @@ The extension does not connect directly to the physical Bar over Bluetooth or th
 Physical BUSY Bar ↔ BUSY desktop/mobile app ↔ BUSY Cloud API ↔ Busy Farm extension
 ```
 
-1. You start, pause, or finish a timer from the Bar or BUSY app.
+1. You start, pause, resume, or cancel a timer from the Bar, BUSY app, or Busy Farm popup.
 2. BUSY synchronizes that state to your account in BUSY Cloud.
-3. Busy Farm authenticates with the Cloud API token and reads the current `/busybar/busy/snapshot` response.
+3. Busy Farm authenticates with the Cloud API token, reads the current `/busybar/busy/snapshot` response, and writes that documented snapshot when you explicitly use a timer control.
 4. The extension normalizes the snapshot into focus, paused, break, idle, or disconnected state.
 5. During a focus state, matching top-level website navigations are redirected to the local blocked page. When focus ends, blocking is removed and redirected tabs can be restored.
 
-This integration is deliberately read-only: Busy Farm never starts, pauses, cancels, or changes the timer on the Bar. The token therefore links the extension to the timer state already maintained by BUSY rather than pairing the extension directly with the hardware.
+Timer controls are always explicit. Busy Farm never starts or changes a timer on page visits, browser startup, or extension reload. The extension reads the latest snapshot immediately before each command so it can preserve the Bar’s current timer and display settings.
 
 The credential is stored in `browser.storage.local` for this extension and browser profile. Reloading the same extension or installing a normal signed update preserves it because the extension ID remains unchanged. Removing the extension, clearing its site/extension data, changing the extension ID, or using another browser profile does not preserve it. Firefox temporary add-ons are removed when Firefox exits, so use **Reload** in `about:debugging` while developing rather than removing and re-adding the add-on. The token is redacted from UI state, diagnostics, and exported settings files.
 
@@ -137,4 +138,4 @@ tests/                 Unit tests and local simulator
 - Host access for BUSY Cloud is declared in the extension manifest. Site access is requested only when a rule is added or imported.
 - Only top-level HTTP and HTTPS navigations are redirected; subresources are not filtered.
 - On connection loss during a known focus session, blocking continues only through a bounded grace window. A timed session uses its expected end plus 30 seconds; an infinite session uses two minutes from the last successful snapshot.
-- The extension never sends commands to start, pause, or modify the BUSY timer. It is a read-only follower of the device state.
+- BUSY timer writes happen only after a Start, Pause, Resume, or Cancel action in the popup; Cancelled sessions are not recorded as completed chickens.
