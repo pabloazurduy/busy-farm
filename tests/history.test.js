@@ -6,6 +6,7 @@ import {
   completedCycleRecords,
   historySince,
   mergeCycleHistory,
+  resolveCycleRunId,
 } from "../src/state/history.js";
 
 const NOW = 1_800_000_000_000;
@@ -56,6 +57,7 @@ test("pause and resume do not duplicate an already completed interval", () => {
     connectionHealth: "connected",
     snapshotType: "INTERVAL",
     sessionId: "paused-session",
+    runId: "local-run-a",
     intervalIndex: 3,
     intervalWorkMs: 25 * 60_000,
     intervalRestMs: 5 * 60_000,
@@ -72,10 +74,97 @@ test("pause and resume do not duplicate an already completed interval", () => {
 
   const history = mergeCycleHistory(firstObservation, afterResume);
   assert.equal(history.length, 1);
-  assert.equal(history[0].id, "paused-session:interval:1");
+  assert.equal(history[0].id, "local-run-a:interval:1");
 });
 
-test("compacts duplicate interval records created by earlier versions", () => {
+test("keeps the same local run ID while a timer is paused and resumed", () => {
+  const paused = {
+    phase: "WORK_PAUSED",
+    connectionHealth: "connected",
+    snapshotType: "SIMPLE",
+    sessionId: "reused-card",
+    runId: "local-run-a",
+    paused: true,
+    phaseDurationMs: 25 * 60_000,
+    remainingMs: 12 * 60_000,
+    expectedTransitionAt: null,
+  };
+  const resumed = {
+    ...paused,
+    phase: "WORK_RUNNING",
+    paused: false,
+    expectedTransitionAt: NOW + 12 * 60_000,
+  };
+
+  assert.equal(
+    resolveCycleRunId(paused, resumed, NOW, () => "unexpected-new-run"),
+    "local-run-a",
+  );
+});
+
+test("counts separate timers when BUSY reuses the same card ID", () => {
+  const idle = {
+    phase: "IDLE",
+    connectionHealth: "connected",
+    snapshotType: "NOT_STARTED",
+    sessionId: null,
+    runId: null,
+  };
+  const work = {
+    phase: "WORK_RUNNING",
+    connectionHealth: "connected",
+    snapshotType: "SIMPLE",
+    sessionId: "reused-card",
+    paused: false,
+    phaseDurationMs: 25 * 60_000,
+    remainingMs: 0,
+  };
+  const firstRunId = resolveCycleRunId(idle, work, NOW, () => "local-run-a");
+  const first = completedCycleRecords(
+    { ...work, runId: firstRunId, expectedTransitionAt: NOW },
+    idle,
+    NOW,
+  );
+  const secondRunId = resolveCycleRunId(idle, work, NOW + 60 * 60_000, () => "local-run-b");
+  const second = completedCycleRecords(
+    { ...work, runId: secondRunId, expectedTransitionAt: NOW + 60 * 60_000 },
+    idle,
+    NOW + 60 * 60_000,
+  );
+
+  const history = mergeCycleHistory(first, second);
+  assert.equal(history.length, 2);
+  assert.deepEqual(history.map((record) => record.id), [
+    "local-run-a:simple",
+    "local-run-b:simple",
+  ]);
+});
+
+test("detects a new timer if the idle state was missed between polls", () => {
+  const previous = {
+    phase: "WORK_RUNNING",
+    snapshotType: "SIMPLE",
+    sessionId: "reused-card",
+    runId: "local-run-a",
+    paused: false,
+    phaseDurationMs: 25 * 60_000,
+    remainingMs: 1000,
+    expectedTransitionAt: NOW + 1000,
+  };
+  const restarted = {
+    ...previous,
+    runId: null,
+    remainingMs: 25 * 60_000,
+    expectedTransitionAt: NOW + 25 * 60_000,
+  };
+
+  assert.equal(
+    resolveCycleRunId(previous, restarted, NOW + 2000, () => "local-run-b"),
+    "local-run-b",
+  );
+});
+
+test("preserves ambiguous records created by earlier versions", () => {
   const history = compactCycleHistory([
     {
       id: "session-a:interval:1:60000000",
@@ -91,9 +180,28 @@ test("compacts duplicate interval records created by earlier versions", () => {
     },
   ]);
 
-  assert.equal(history.length, 1);
-  assert.equal(history[0].id, "session-a:interval:1");
-  assert.equal(history[0].completedAt, NOW - 60_000);
+  assert.equal(history.length, 2);
+  assert.deepEqual(history.map((record) => record.id), [
+    "session-a:interval:1:60000000",
+    "session-a:interval:1:60000020",
+  ]);
+});
+
+test("does not duplicate a legacy observation when assigning its first run ID", () => {
+  const legacy = {
+    id: "session-a:interval:1",
+    sessionId: "session-a",
+    intervalIndex: 1,
+    completedAt: NOW,
+  };
+  const upgraded = {
+    ...legacy,
+    id: "local-run-a:interval:1",
+    runId: "local-run-a",
+    completedAt: NOW + 1000,
+  };
+
+  assert.equal(mergeCycleHistory([legacy], [upgraded]).length, 1);
 });
 
 test("leaves clean history unchanged to avoid rewriting storage every poll", () => {

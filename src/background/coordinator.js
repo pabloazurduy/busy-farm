@@ -5,7 +5,11 @@ import { normalizeBusySnapshot } from "../busy/normalize.js";
 import { blockingDecision, disconnectedRuntime } from "../busy/policy.js";
 import { BlockEngine } from "../blocking/engine.js";
 import { DEFAULT_RUNTIME, STORAGE_KEYS } from "../state/defaults.js";
-import { completedCycleRecords, mergeCycleHistory } from "../state/history.js";
+import {
+  completedCycleRecords,
+  mergeCycleHistory,
+  resolveCycleRunId,
+} from "../state/history.js";
 import {
   loadState,
   mergeSettings,
@@ -133,6 +137,7 @@ export class Coordinator {
       this.failureCount = 0;
       const previousBlocking = this.runtime.blockingActive;
       const previousRuntime = this.runtime;
+      normalized.runId = resolveCycleRunId(previousRuntime, normalized, startedAt);
       this.runtime = {
         ...this.runtime,
         ...normalized,

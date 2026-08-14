@@ -75,6 +75,72 @@ test("coordinator requires explicit origin permission before adding a rule", asy
   assert.equal(response.error.code, "PERMISSION_MISSING");
 });
 
+test("coordinator counts separate completed timers that reuse a BUSY card ID", async (context) => {
+  const stored = {
+    [STORAGE_KEYS.SETTINGS]: {
+      connection: {
+        transport: "cloud",
+        baseUrl: "https://api.busy.app/busybar",
+        token: "test-token",
+      },
+    },
+  };
+  const snapshots = [
+    simpleSnapshot("reused-card"),
+    idleSnapshot(),
+    simpleSnapshot("reused-card"),
+    idleSnapshot(),
+  ];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => snapshots.shift(),
+  });
+  globalThis.browser = firefoxMock(stored);
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+    delete globalThis.browser;
+  });
+
+  const moduleUrl = new URL(`../src/background/coordinator.js?history-test=${Date.now()}`, import.meta.url);
+  const { Coordinator } = await import(moduleUrl);
+  const coordinator = new Coordinator();
+  coordinator.schedule = () => {};
+  await coordinator.initialize();
+
+  await coordinator.pollOnce();
+  const firstRunId = coordinator.runtime.runId;
+  await coordinator.pollOnce();
+  await coordinator.pollOnce();
+  const secondRunId = coordinator.runtime.runId;
+  await coordinator.pollOnce();
+
+  assert.notEqual(firstRunId, secondRunId);
+  assert.equal(coordinator.history.length, 2);
+  assert.equal(stored[STORAGE_KEYS.HISTORY].length, 2);
+});
+
+function simpleSnapshot(cardId) {
+  return {
+    snapshot: {
+      type: "SIMPLE",
+      card_id: cardId,
+      time_left_ms: 0,
+      total_time_ms: 25 * 60_000,
+      is_paused: false,
+    },
+    snapshot_timestamp_ms: Date.now(),
+  };
+}
+
+function idleSnapshot() {
+  return {
+    snapshot: { type: "NOT_STARTED" },
+    snapshot_timestamp_ms: Date.now(),
+  };
+}
+
 function firefoxMock(stored, hooks = {}) {
   const noOpEvent = { addListener() {} };
   return {

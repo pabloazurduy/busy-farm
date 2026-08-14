@@ -44,6 +44,7 @@ export const DEFAULT_RUNTIME = Object.freeze({
   sourceTransport: "cloud",
   snapshotType: null,
   sessionId: null,
+  runId: null,
   paused: false,
   phaseDurationMs: null,
   intervalIndex: null,
