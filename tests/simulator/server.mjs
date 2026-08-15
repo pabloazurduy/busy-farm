@@ -81,7 +81,7 @@ export function snapshotFor(deviceState, now = Date.now()) {
       snapshot: {
         type: "INTERVAL",
         card_id: "00000000-0000-0000-0000-000000000002",
-        current_interval: 2,
+        current_interval: 1,
         current_interval_time_total_ms: total,
         current_interval_time_left_ms: Math.max(0, total - elapsed),
         is_paused: false,

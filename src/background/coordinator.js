@@ -589,7 +589,7 @@ function simulatedPayload(phase) {
       snapshot: {
         type: "INTERVAL",
         card_id: "simulated-session",
-        current_interval: 2,
+        current_interval: 1,
         current_interval_time_total_ms: 300000,
         current_interval_time_left_ms: 270000,
         is_paused: false,

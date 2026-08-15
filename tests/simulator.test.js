@@ -28,6 +28,6 @@ test("simulator creates paused, infinite, and break snapshots", () => {
   assert.equal(snapshotFor(startMode("infinite", START), START + 500).snapshot.type, "INFINITE");
   const rest = snapshotFor(startMode("break", START), START + 500).snapshot;
   assert.equal(rest.type, "INTERVAL");
-  assert.equal(rest.current_interval, 2);
+  assert.equal(rest.current_interval, 1);
   assert.equal(rest.current_interval_time_total_ms, rest.interval_settings.interval_rest_ms);
 });

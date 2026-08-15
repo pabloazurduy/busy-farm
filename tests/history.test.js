@@ -17,14 +17,14 @@ test("reconstructs completed work intervals in the current BUSY session", () => 
     connectionHealth: "connected",
     snapshotType: "INTERVAL",
     sessionId: "session-a",
-    intervalIndex: 5,
+    intervalIndex: 4,
     intervalWorkMs: 25 * 60_000,
     intervalRestMs: 5 * 60_000,
     phaseDurationMs: 25 * 60_000,
     expectedTransitionAt: NOW + 20 * 60_000,
   }, NOW);
 
-  assert.deepEqual(records.map((record) => record.intervalIndex), [3, 1]);
+  assert.deepEqual(records.map((record) => record.intervalIndex), [2, 0]);
   assert.equal(records.every((record) => record.durationMs === 25 * 60_000), true);
 });
 
@@ -58,7 +58,7 @@ test("pause and resume do not duplicate an already completed interval", () => {
     snapshotType: "INTERVAL",
     sessionId: "paused-session",
     runId: "local-run-a",
-    intervalIndex: 3,
+    intervalIndex: 2,
     intervalWorkMs: 25 * 60_000,
     intervalRestMs: 5 * 60_000,
     phaseDurationMs: 25 * 60_000,
@@ -74,7 +74,39 @@ test("pause and resume do not duplicate an already completed interval", () => {
 
   const history = mergeCycleHistory(firstObservation, afterResume);
   assert.equal(history.length, 1);
-  assert.equal(history[0].id, "local-run-a:interval:1");
+  assert.equal(history[0].id, "local-run-a:interval:0");
+});
+
+test("keeps one run across BUSY's zero-based work-to-break transition", () => {
+  const work = {
+    phase: "WORK_RUNNING",
+    connectionHealth: "connected",
+    snapshotType: "INTERVAL",
+    sessionId: "interval-card",
+    runId: "local-run-a",
+    paused: false,
+    intervalIndex: 0,
+    intervalWorkMs: 25 * 60_000,
+    intervalRestMs: 5 * 60_000,
+    phaseDurationMs: 25 * 60_000,
+    remainingMs: 0,
+    expectedTransitionAt: NOW,
+  };
+  const rest = {
+    ...work,
+    phase: "BREAK_RUNNING",
+    intervalIndex: 1,
+    phaseDurationMs: 5 * 60_000,
+    remainingMs: 5 * 60_000,
+    expectedTransitionAt: NOW + 5 * 60_000,
+  };
+
+  const runId = resolveCycleRunId(work, rest, NOW, () => "unexpected-new-run");
+  const records = completedCycleRecords(work, { ...rest, runId }, NOW);
+
+  assert.equal(runId, "local-run-a");
+  assert.equal(records.length, 1);
+  assert.equal(records[0].id, "local-run-a:interval:0");
 });
 
 test("keeps the same local run ID while a timer is paused and resumed", () => {
@@ -202,6 +234,24 @@ test("does not duplicate a legacy observation when assigning its first run ID", 
   };
 
   assert.equal(mergeCycleHistory([legacy], [upgraded]).length, 1);
+});
+
+test("does not duplicate a first work interval recorded as simple by the old index parser", () => {
+  const oldRecord = {
+    id: "local-run-a:simple",
+    sessionId: "session-a",
+    runId: "local-run-a",
+    intervalIndex: null,
+    completedAt: NOW,
+  };
+  const corrected = {
+    ...oldRecord,
+    id: "local-run-a:interval:0",
+    intervalIndex: 0,
+    completedAt: NOW + 1000,
+  };
+
+  assert.equal(mergeCycleHistory([oldRecord], [corrected]).length, 1);
 });
 
 test("leaves clean history unchanged to avoid rewriting storage every poll", () => {

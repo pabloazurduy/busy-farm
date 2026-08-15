@@ -72,18 +72,18 @@ export function historySince(history, period, now = Date.now()) {
 }
 
 function recordsFromCurrentInterval(current) {
-  const index = positiveInteger(current.intervalIndex);
+  const index = nonNegativeInteger(current.intervalIndex);
   const workMs = positiveNumber(current.intervalWorkMs);
   const restMs = positiveNumber(current.intervalRestMs);
   const sessionId = current.sessionId;
-  if (!index || !workMs || !restMs || !sessionId || current.expectedTransitionAt == null) return [];
+  if (index == null || !workMs || !restMs || !sessionId || current.expectedTransitionAt == null) return [];
 
   let cursor = current.expectedTransitionAt - current.phaseDurationMs;
   const records = [];
-  for (let interval = index - 1; interval >= 1; interval -= 1) {
-    const durationMs = interval % 2 === 1 ? workMs : restMs;
+  for (let interval = index - 1; interval >= 0; interval -= 1) {
+    const durationMs = interval % 2 === 0 ? workMs : restMs;
     const startedAt = cursor - durationMs;
-    if (interval % 2 === 1) {
+    if (interval % 2 === 0) {
       records.push(makeRecord(sessionId, current.runId, interval, startedAt, cursor, durationMs));
     }
     cursor = startedAt;
@@ -105,7 +105,7 @@ function recordFromTransition(previous, current, observedAt) {
     : observedAt;
   const durationMs = positiveNumber(previous.phaseDurationMs);
   const startedAt = durationMs ? completedAt - durationMs : null;
-  const intervalIndex = positiveInteger(previous.intervalIndex);
+  const intervalIndex = nonNegativeInteger(previous.intervalIndex);
   return makeRecord(
     previous.sessionId,
     previous.runId,
@@ -118,7 +118,7 @@ function recordFromTransition(previous, current, observedAt) {
 
 function makeRecord(sessionId, runId, intervalIndex, startedAt, completedAt, durationMs) {
   const completionBucket = Math.round(completedAt / 30000);
-  const kind = intervalIndex
+  const kind = intervalIndex != null
     ? `interval:${intervalIndex}`
     : sessionId
       ? "simple"
@@ -135,7 +135,7 @@ function makeRecord(sessionId, runId, intervalIndex, startedAt, completedAt, dur
 }
 
 function logicalCycleKey(record) {
-  if (record.runId && positiveInteger(record.intervalIndex)) {
+  if (record.runId && nonNegativeInteger(record.intervalIndex) != null) {
     return `${record.runId}:interval:${record.intervalIndex}`;
   }
   if (record.runId && record.intervalIndex == null) {
@@ -145,7 +145,7 @@ function logicalCycleKey(record) {
   // card ID for separate timers. Preserve their original IDs rather than
   // destructively folding potentially valid completions together again.
   if (record.id) return String(record.id);
-  if (record.sessionId && positiveInteger(record.intervalIndex)) {
+  if (record.sessionId && nonNegativeInteger(record.intervalIndex) != null) {
     return `${record.sessionId}:interval:${record.intervalIndex}`;
   }
   if (record.sessionId && record.intervalIndex == null) {
@@ -160,10 +160,12 @@ function continuesSameRun(previous, current, observedAt) {
   if (!previous.sessionId || previous.sessionId !== current.sessionId) return false;
   if (previous.snapshotType !== current.snapshotType) return false;
 
-  const previousInterval = positiveInteger(previous.intervalIndex);
-  const currentInterval = positiveInteger(current.intervalIndex);
-  if (previousInterval || currentInterval) {
-    if (!previousInterval || !currentInterval || currentInterval < previousInterval) return false;
+  const previousInterval = nonNegativeInteger(previous.intervalIndex);
+  const currentInterval = nonNegativeInteger(current.intervalIndex);
+  if (previousInterval != null || currentInterval != null) {
+    if (previousInterval == null || currentInterval == null || currentInterval < previousInterval) {
+      return false;
+    }
     if (currentInterval > previousInterval) return true;
   }
 
@@ -183,10 +185,16 @@ function remainingTimeWasReset(previous, current, observedAt) {
 }
 
 function matchesLegacyObservation(stored, candidate) {
-  if (!candidate?.runId || stored?.runId) return false;
+  if (!candidate?.runId) return false;
+  if (stored?.runId && stored.runId !== candidate.runId) return false;
   if (!stored.sessionId || stored.sessionId !== candidate.sessionId) return false;
-  if ((positiveInteger(stored.intervalIndex) ?? null)
-    !== (positiveInteger(candidate.intervalIndex) ?? null)) return false;
+  const storedInterval = nonNegativeInteger(stored.intervalIndex);
+  const candidateInterval = nonNegativeInteger(candidate.intervalIndex);
+  const sameInterval = storedInterval === candidateInterval;
+  const legacyFirstWork = storedInterval == null
+    && candidateInterval === 0
+    && String(stored.id ?? "").endsWith(":simple");
+  if (!sameInterval && !legacyFirstWork) return false;
   return Math.abs(Number(stored.completedAt) - Number(candidate.completedAt))
     <= COMPLETION_TOLERANCE_MS;
 }
@@ -201,9 +209,9 @@ function positiveNumber(value) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-function positiveInteger(value) {
-  const number = positiveNumber(value);
-  return number && Number.isInteger(number) ? number : null;
+function nonNegativeInteger(value) {
+  const number = nonNegativeNumber(value);
+  return number != null && Number.isInteger(number) ? number : null;
 }
 
 function nonNegativeNumber(value) {

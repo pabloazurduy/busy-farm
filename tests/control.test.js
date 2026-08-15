@@ -65,7 +65,7 @@ test("resumes an interval timer without changing its remaining time or configura
     snapshot: {
       type: "INTERVAL",
       card_id: "interval-card",
-      current_interval: 3,
+      current_interval: 2,
       current_interval_time_total_ms: 25 * 60_000,
       current_interval_time_left_ms: 12 * 60_000,
       is_paused: true,

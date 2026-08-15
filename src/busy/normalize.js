@@ -67,7 +67,11 @@ export function normalizeBusySnapshot(payload, now = Date.now()) {
       if (durationMs === restMs) phaseKind = "break";
     }
     if (phaseKind === "unknown" && interval != null) {
-      phaseKind = interval % 2 === 1 ? "work" : "break";
+      // BUSY numbers interval phases from zero: even indices are work and odd
+      // indices are rest. This fallback matters when work and rest use the same
+      // duration, or when firmware reports a rounded total that does not exactly
+      // match either configured duration.
+      phaseKind = interval % 2 === 0 ? "work" : "break";
     }
 
     const phase = phaseKind === "work"
