@@ -4,6 +4,7 @@ export function blockingDecision(runtime, settings, now = Date.now()) {
       return true;
     case "WORK_PAUSED":
       return Boolean(settings.behavior.blockWhilePaused);
+    case "WORK_COMPLETE":
     case "IDLE":
     case "BREAK_RUNNING":
     case "BREAK_PAUSED":
@@ -36,4 +37,3 @@ export function disconnectedRuntime(previous, error, now = Date.now()) {
     },
   };
 }
-

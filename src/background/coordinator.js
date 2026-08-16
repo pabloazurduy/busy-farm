@@ -87,7 +87,7 @@ export class Coordinator {
       const steps = [1000, 2000, 4000, 8000, 15000, 30000];
       return steps[Math.min(this.failureCount - 1, steps.length - 1)];
     }
-    const active = new Set(["WORK_RUNNING", "WORK_PAUSED", "BREAK_RUNNING", "BREAK_PAUSED"])
+    const active = new Set(["WORK_RUNNING", "WORK_PAUSED", "WORK_COMPLETE", "BREAK_RUNNING", "BREAK_PAUSED"])
       .has(this.runtime.phase);
     if (active) return this.settings.polling.activeMs;
     if (this.settings.connection.transport === "cloud") return this.settings.polling.cloudIdleMs;

@@ -3,6 +3,7 @@ const COMPLETION_TOLERANCE_MS = 15000;
 const TIMER_PHASES = new Set([
   "WORK_RUNNING",
   "WORK_PAUSED",
+  "WORK_COMPLETE",
   "BREAK_RUNNING",
   "BREAK_PAUSED",
   "UNKNOWN_ACTIVE",
@@ -28,6 +29,8 @@ export function completedCycleRecords(previous, current, observedAt = Date.now()
 
   const transition = recordFromTransition(previous, current, observedAt);
   if (transition) candidates.push(transition);
+  const completed = recordFromCompletedSnapshot(current, observedAt);
+  if (completed) candidates.push(completed);
   return uniqueById(candidates);
 }
 
@@ -110,6 +113,23 @@ function recordFromTransition(previous, current, observedAt) {
     previous.sessionId,
     previous.runId,
     intervalIndex,
+    startedAt,
+    completedAt,
+    durationMs,
+  );
+}
+
+function recordFromCompletedSnapshot(current, observedAt) {
+  if (current.phase !== "WORK_COMPLETE") return null;
+  const completedAt = current.expectedTransitionAt != null
+    ? Math.min(observedAt, current.expectedTransitionAt)
+    : observedAt;
+  const durationMs = positiveNumber(current.phaseDurationMs);
+  const startedAt = durationMs ? completedAt - durationMs : null;
+  return makeRecord(
+    current.sessionId,
+    current.runId,
+    nonNegativeInteger(current.intervalIndex),
     startedAt,
     completedAt,
     durationMs,

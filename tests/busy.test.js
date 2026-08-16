@@ -64,6 +64,44 @@ test("does not deduct snapshot age while a timer is paused", () => {
   assert.equal(result.expectedTransitionAt, null);
 });
 
+test("marks a work timer complete when BUSY remains at zero", () => {
+  const result = normalizeBusySnapshot({
+    snapshot: {
+      type: "SIMPLE",
+      card_id: "completed-card",
+      time_left_ms: 25 * 60_000,
+      total_time_ms: 25 * 60_000,
+      is_paused: false,
+    },
+    snapshot_timestamp_ms: NOW - 30 * 60_000,
+  }, NOW);
+
+  assert.equal(result.phase, "WORK_COMPLETE");
+  assert.equal(result.remainingMs, 0);
+  assert.equal(result.expectedTransitionAt, NOW - 5 * 60_000);
+});
+
+test("does not treat a completed break as completed work", () => {
+  const result = normalizeBusySnapshot({
+    snapshot: {
+      type: "INTERVAL",
+      card_id: "break-card",
+      current_interval: 1,
+      current_interval_time_total_ms: 5 * 60_000,
+      current_interval_time_left_ms: 0,
+      is_paused: false,
+      interval_settings: {
+        interval_work_ms: 25 * 60_000,
+        interval_rest_ms: 5 * 60_000,
+      },
+    },
+    snapshot_timestamp_ms: NOW,
+  }, NOW);
+
+  assert.equal(result.phase, "BREAK_RUNNING");
+  assert.equal(result.remainingMs, 0);
+});
+
 test("normalizes an infinite work timer", () => {
   const result = normalizeBusySnapshot({
     snapshot: { type: "INFINITE", card_id: "deep-work", is_paused: false },

@@ -56,6 +56,7 @@ function renderClock() {
 
 function modeFor(phase) {
   if (phase === "WORK_RUNNING") return "focus";
+  if (phase === "WORK_COMPLETE") return "complete";
   if (phase.includes("PAUSED")) return "paused";
   if (phase.includes("BREAK")) return "break";
   if (phase === "IDLE") return "idle";

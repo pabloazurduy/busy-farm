@@ -9,6 +9,7 @@ const NOW = 2_000_000;
 
 test("blocks work but not idle or break", () => {
   assert.equal(blockingDecision({ phase: "WORK_RUNNING" }, settings, NOW), true);
+  assert.equal(blockingDecision({ phase: "WORK_COMPLETE" }, settings, NOW), false);
   assert.equal(blockingDecision({ phase: "IDLE" }, settings, NOW), false);
   assert.equal(blockingDecision({ phase: "BREAK_RUNNING" }, settings, NOW), false);
 });

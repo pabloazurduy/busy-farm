@@ -139,9 +139,11 @@ function renderClock() {
   elements.timer.textContent = remaining == null ? "--:--" : formatDuration(remaining);
   elements.timer.classList.toggle("word", remaining == null);
   const duration = Number(runtime.phaseDurationMs);
-  const ratio = remaining != null && Number.isFinite(duration) && duration > 0
-    ? Math.max(0, Math.min(1, (duration - remaining) / duration))
-    : 0;
+  const ratio = runtime.phase === "WORK_COMPLETE"
+    ? 1
+    : remaining != null && Number.isFinite(duration) && duration > 0
+      ? Math.max(0, Math.min(1, (duration - remaining) / duration))
+      : 0;
   progressTrack.style.strokeDasharray = String(RING_CIRCUMFERENCE);
   progressTrack.style.strokeDashoffset = "0";
   elements.progressValue.style.strokeDasharray = String(RING_CIRCUMFERENCE);
@@ -356,6 +358,7 @@ async function addCurrentSite() {
 
 function modeFor(phase) {
   if (phase === "WORK_RUNNING") return "focus";
+  if (phase === "WORK_COMPLETE") return "complete";
   if (phase.includes("PAUSED")) return "paused";
   if (phase.includes("BREAK")) return "break";
   if (phase === "IDLE") return "idle";
@@ -363,6 +366,7 @@ function modeFor(phase) {
 }
 
 function blockingCopy(phase) {
+  if (phase === "WORK_COMPLETE") return "Focus complete · ready for break";
   if (phase.includes("BREAK")) return "Break window";
   if (phase.includes("PAUSED")) return "Timer paused";
   if (phase === "IDLE") return "Ready for focus";

@@ -42,6 +42,29 @@ test("records a completed simple timer only when it ends naturally", () => {
   assert.equal(completedCycleRecords({ ...previous, expectedTransitionAt: NOW + 60_000 }, idle, NOW).length, 0);
 });
 
+test("records a sticky completed snapshot once before BUSY advances", () => {
+  const complete = {
+    phase: "WORK_COMPLETE",
+    connectionHealth: "connected",
+    snapshotType: "SIMPLE",
+    sessionId: "completed-card",
+    runId: "local-run-a",
+    paused: false,
+    phaseDurationMs: 25 * 60_000,
+    remainingMs: 0,
+    expectedTransitionAt: NOW,
+  };
+
+  const first = completedCycleRecords(null, complete, NOW + 1000);
+  const repeated = completedCycleRecords(complete, complete, NOW + 5000);
+  const history = mergeCycleHistory(first, repeated);
+
+  assert.equal(first.length, 1);
+  assert.equal(history.length, 1);
+  assert.equal(history[0].id, "local-run-a:simple");
+  assert.equal(history[0].completedAt, NOW);
+});
+
 test("merges without duplicating observations and filters periods", () => {
   const recent = { id: "recent", completedAt: NOW - 2 * 86400000 };
   const old = { id: "old", completedAt: NOW - 40 * 86400000 };

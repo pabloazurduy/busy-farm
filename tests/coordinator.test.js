@@ -121,6 +121,72 @@ test("coordinator counts separate completed timers that reuse a BUSY card ID", a
   assert.equal(stored[STORAGE_KEYS.HISTORY].length, 2);
 });
 
+test("coordinator releases blocking while BUSY waits at zero", async (context) => {
+  const now = Date.now();
+  const stored = {
+    [STORAGE_KEYS.SETTINGS]: {
+      connection: {
+        transport: "cloud",
+        baseUrl: "https://api.busy.app/busybar",
+        token: "test-token",
+      },
+    },
+    [STORAGE_KEYS.SITES]: [{
+      id: "rule-1",
+      hostname: "example.com",
+      includeSubdomains: true,
+      permissionPattern: "*://*.example.com/*",
+      enabled: true,
+    }],
+    [STORAGE_KEYS.RUNTIME]: {
+      phase: "WORK_RUNNING",
+      connectionHealth: "connected",
+      sourceTransport: "cloud",
+      snapshotType: "SIMPLE",
+      sessionId: "completed-card",
+      runId: "local-run-a",
+      paused: false,
+      phaseDurationMs: 25 * 60_000,
+      remainingMs: 1000,
+      expectedTransitionAt: now + 1000,
+      lastSnapshotTimestamp: now - 1000,
+      lastSuccessAt: now - 1000,
+      blockingActive: true,
+    },
+  };
+  let requestListener;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => simpleSnapshot("completed-card"),
+  });
+  globalThis.browser = firefoxMock(stored, {
+    onRequest(listener) { requestListener = listener; },
+  });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+    delete globalThis.browser;
+  });
+
+  const moduleUrl = new URL(`../src/background/coordinator.js?complete-test=${Date.now()}`, import.meta.url);
+  const { Coordinator } = await import(moduleUrl);
+  const coordinator = new Coordinator();
+  coordinator.schedule = () => {};
+  await coordinator.initialize();
+
+  assert.match(
+    requestListener({ url: "https://example.com/distraction", tabId: 7 }).redirectUrl,
+    /pages\/blocked\/index\.html/,
+  );
+  await coordinator.pollOnce();
+
+  assert.equal(coordinator.runtime.phase, "WORK_COMPLETE");
+  assert.equal(coordinator.runtime.blockingActive, false);
+  assert.deepEqual(requestListener({ url: "https://example.com/distraction", tabId: 7 }), {});
+  assert.equal(coordinator.history.length, 1);
+});
+
 function simpleSnapshot(cardId) {
   return {
     snapshot: {

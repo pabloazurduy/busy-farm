@@ -15,6 +15,7 @@ export function phaseLabel(phase) {
     IDLE: "Ready",
     WORK_RUNNING: "Focus",
     WORK_PAUSED: "Paused",
+    WORK_COMPLETE: "Focus complete",
     BREAK_RUNNING: "Break",
     BREAK_PAUSED: "Break paused",
     UNKNOWN_ACTIVE: "Active",

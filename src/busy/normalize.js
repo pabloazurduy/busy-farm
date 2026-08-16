@@ -2,6 +2,7 @@ const PHASES = new Set([
   "IDLE",
   "WORK_RUNNING",
   "WORK_PAUSED",
+  "WORK_COMPLETE",
   "BREAK_RUNNING",
   "BREAK_PAUSED",
   "UNKNOWN_ACTIVE",
@@ -112,16 +113,20 @@ function normalized({
   intervalRestMs = null,
 }) {
   if (!PHASES.has(phase)) throw new SnapshotError(`Invalid normalized phase: ${phase}`);
+  const snapshotObservedAt = Math.min(timestamp, now);
   const snapshotAgeMs = paused || remainingMs == null
     ? 0
-    : Math.max(0, now - Math.min(timestamp, now));
+    : Math.max(0, now - snapshotObservedAt);
   const currentRemainingMs = remainingMs == null
     ? null
     : paused
       ? remainingMs
       : Math.max(0, remainingMs - snapshotAgeMs);
+  const currentPhase = currentRemainingMs === 0 && String(phase).startsWith("WORK_")
+    ? "WORK_COMPLETE"
+    : phase;
   return {
-    phase,
+    phase: currentPhase,
     snapshotType: type,
     sessionId,
     paused,
@@ -130,7 +135,7 @@ function normalized({
     intervalWorkMs,
     intervalRestMs,
     remainingMs: currentRemainingMs,
-    expectedTransitionAt: currentRemainingMs == null || paused ? null : now + currentRemainingMs,
+    expectedTransitionAt: remainingMs == null || paused ? null : snapshotObservedAt + remainingMs,
     lastSnapshotTimestamp: timestamp,
     lastSuccessAt: now,
     connectionHealth: "connected",
